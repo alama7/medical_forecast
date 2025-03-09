@@ -1,0 +1,40 @@
+DeviceType,UtilizationRate
+MRI Scanner,10.0
+X-Ray Machine,10.0
+Infusion Pump,18.0
+ECG Machine,8.0
+Ultrasound,8.0
+CT Scanner,8.0
+Defibrillator,2.0
+Ventilator,20.0
+Patient Monitor,18.0
+Anesthesia Machine,10.0
+Surgical Light,10.0
+Surgical Table,10.0
+Blood Gas Analyzer,16.0
+Centrifuge,6.0
+Microscope,6.0
+Dialysis Machine,12.0
+Mammography Unit,8.0
+Portable X-Ray,12.0
+EEG Machine,8.0
+Blood Pressure Monitor,16.0
+Pulse Oximeter,18.0
+Chemotherapy Pump,12.0
+Infant Incubator,18.0
+Phototherapy Unit,10.0
+Cardiac Catheterization System,12.0
+Endoscopy System,8.0
+Linear Accelerator,8.0
+PET Scanner,8.0
+Bone Densitometer,6.0
+Respiratory Function Analyzer,8.0
+Ophthalmoscope,3.0
+Visual Field Analyzer,6.0
+Surgical Microscope,8.0
+Dental X-Ray,6.0
+Dental Chair Unit,8.0
+Sterilizer,18.0
+Washer Disinfector,8.0
+Chemistry Analyzer,18.0
+Hematology Analyzer,8.0
