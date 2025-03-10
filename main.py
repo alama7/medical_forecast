@@ -14,9 +14,6 @@ from data_processing import (
     MARKET_PRICES
 )
 
-# Set OpenAI API key
-# OpenAI API key is now configured in config.py
-
 # Set up logging first
 logging.basicConfig(
     level=logging.INFO,
@@ -31,6 +28,9 @@ logger = logging.getLogger(__name__)
 # OpenAI API setup with error handling
 try:
     openai.api_key = os.environ.get('OPENAI_API_KEY')
+    if not openai.api_key:
+        logger.error("OPENAI_API_KEY environment variable not found")
+        raise ValueError("OPENAI_API_KEY environment variable not found")
     if not openai.api_key:
         raise ValueError("OpenAI API key not found in environment variables")
 except Exception as e:
