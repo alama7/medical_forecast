@@ -15,7 +15,7 @@ from data_processing import (
 )
 
 # Set OpenAI API key
-os.environ['OPENAI_API_KEY'] = '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'
+# OpenAI API key is now configured in config.py
 
 # Set up logging first
 logging.basicConfig(
