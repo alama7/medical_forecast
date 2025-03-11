@@ -7,13 +7,26 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+# Constants for column names
+PURCHASE_DATE_COLUMN = 'PurchaseDate'
+
 # Move the MARKET_PRICES constant here
 MARKET_PRICES = {
     ('Imaging', 'MRI'): {
         'base_price': 1000000,
-        # ... rest of the market prices ...
+        'premium_keywords': ['3T', 'TESLA', 'PREMIUM'],
+        'budget_keywords': ['REFURBISHED', 'BASIC'],
+        'premium_multiplier': 1.3,
+        'budget_multiplier': 0.7
     },
-    # ... other categories ...
+    ('Imaging', 'CT'): {
+        'base_price': 500000,
+        'premium_keywords': ['PREMIUM', 'ADVANCED'],
+        'budget_keywords': ['BASIC', 'STANDARD'],
+        'premium_multiplier': 1.2,
+        'budget_multiplier': 0.8
+    },
+    # Add more categories as needed
 }
 
 def get_device_category(device_type: str) -> Tuple[str, str]:

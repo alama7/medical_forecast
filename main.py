@@ -11,7 +11,8 @@ from data_processing import (
     get_device_category,
     calculate_price,
     estimate_missing_costs,
-    MARKET_PRICES
+    MARKET_PRICES,
+    PURCHASE_DATE_COLUMN
 )
 
 # Set up logging first
@@ -39,25 +40,6 @@ except Exception as e:
 
 # Create OpenAI client
 client = openai.OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
-
-# Add market prices constant
-MARKET_PRICES = {
-    ('Imaging', 'MRI'): {
-        'base_price': 1000000,
-        'premium_keywords': ['3T', 'TESLA', 'PREMIUM'],
-        'budget_keywords': ['REFURBISHED', 'BASIC'],
-        'premium_multiplier': 1.3,
-        'budget_multiplier': 0.7
-    },
-    ('Imaging', 'CT'): {
-        'base_price': 500000,
-        'premium_keywords': ['PREMIUM', 'ADVANCED'],
-        'budget_keywords': ['BASIC', 'STANDARD'],
-        'premium_multiplier': 1.2,
-        'budget_multiplier': 0.8
-    },
-    # Add more categories as needed
-}
 
 def load_or_create_utilization_cache() -> Dict[str, float]:
     """
@@ -123,8 +105,8 @@ def load_data() -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
     try:
         devices = pd.read_csv(Path(CONFIG['DEVICES_FILE']))
         # Ensure PurchaseDate is converted to datetime
-        if 'PurchaseDate' in devices.columns:
-            devices['PurchaseDate'] = pd.to_datetime(devices['PurchaseDate'], errors='coerce')
+        if PURCHASE_DATE_COLUMN in devices.columns:
+            devices[PURCHASE_DATE_COLUMN] = pd.to_datetime(devices[PURCHASE_DATE_COLUMN], errors='coerce')
             
         # Load work orders and ensure Date is converted to datetime
         work_orders = pd.read_csv(Path(CONFIG['WORK_ORDERS_FILE']))
@@ -232,7 +214,7 @@ def calculate_device_scores(devices: pd.DataFrame,
                 continue
                 
             # Calculate device age score
-            device_age = calculate_device_age(row['PurchaseDate'])
+            device_age = calculate_device_age(row[PURCHASE_DATE_COLUMN])
             expected_lifecycle = row['ExpectedLifecycle (years)']
             age_score = (device_age / expected_lifecycle) * 100
 
@@ -258,6 +240,7 @@ def calculate_device_scores(devices: pd.DataFrame,
                 age_score, maintenance_cost_score, risk_score,
                 maintenance_history_score, location_score, utilization_score
             )
+            logger.info(f"Device {device_type} scored {total_score:.2f}")
 
             device_scores.append({
                 'DeviceID': device_id,
@@ -265,6 +248,7 @@ def calculate_device_scores(devices: pd.DataFrame,
                 'TotalScore': total_score,
                 'ReplacementCost': replacement_cost
             })
+            
         except Exception as e:
             logger.error(f"Error processing device {device_id}: {e}")
             continue

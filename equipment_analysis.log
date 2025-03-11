@@ -12481,3 +12481,218 @@ A detailed migration guide is available here: https://github.com/openai/openai-p
 2025-03-10 09:23:12,139 - __main__ - INFO - Analysis completed successfully
 2025-03-10 09:23:21,879 - __main__ - INFO - Starting equipment analysis
 2025-03-10 09:23:22,001 - __main__ - INFO - Analysis completed successfully
+2025-03-11 13:46:10,312 - __main__ - INFO - Starting equipment analysis
+2025-03-11 13:46:10,451 - __main__ - INFO - Analysis completed successfully
+2025-03-11 13:53:53,899 - __main__ - INFO - Starting equipment analysis
+2025-03-11 13:53:54,041 - __main__ - INFO - Analysis completed successfully
+2025-03-11 13:59:04,085 - __main__ - INFO - Starting equipment analysis
+2025-03-11 13:59:04,219 - __main__ - INFO - Analysis completed successfully
+2025-03-11 13:59:32,606 - __main__ - INFO - Starting equipment analysis
+2025-03-11 13:59:32,761 - __main__ - INFO - Analysis completed successfully
+2025-03-11 13:59:50,402 - __main__ - INFO - Starting equipment analysis
+2025-03-11 14:03:26,875 - __main__ - INFO - Starting equipment analysis
+2025-03-11 14:03:27,039 - __main__ - INFO - Analysis completed successfully
+2025-03-11 14:04:13,093 - __main__ - INFO - Starting equipment analysis
+2025-03-11 14:04:13,114 - __main__ - ERROR - Error processing device D001: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U11')) -> None
+2025-03-11 14:04:13,115 - __main__ - ERROR - Error processing device D002: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U13')) -> None
+2025-03-11 14:04:13,116 - __main__ - ERROR - Error processing device D003: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U13')) -> None
+2025-03-11 14:04:13,117 - __main__ - ERROR - Error processing device D004: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U11')) -> None
+2025-03-11 14:04:13,118 - __main__ - ERROR - Error processing device D005: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,119 - __main__ - ERROR - Error processing device D006: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,120 - __main__ - ERROR - Error processing device D007: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U13')) -> None
+2025-03-11 14:04:13,121 - __main__ - ERROR - Error processing device D008: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,122 - __main__ - ERROR - Error processing device D009: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,123 - __main__ - ERROR - Error processing device D010: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U18')) -> None
+2025-03-11 14:04:13,124 - __main__ - ERROR - Error processing device D011: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U14')) -> None
+2025-03-11 14:04:13,125 - __main__ - ERROR - Error processing device D012: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U14')) -> None
+2025-03-11 14:04:13,125 - __main__ - ERROR - Error processing device D013: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U18')) -> None
+2025-03-11 14:04:13,126 - __main__ - ERROR - Error processing device D014: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,127 - __main__ - ERROR - Error processing device D015: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,128 - __main__ - ERROR - Error processing device D016: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U16')) -> None
+2025-03-11 14:04:13,129 - __main__ - ERROR - Error processing device D017: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U16')) -> None
+2025-03-11 14:04:13,130 - __main__ - ERROR - Error processing device D018: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U14')) -> None
+2025-03-11 14:04:13,130 - __main__ - ERROR - Error processing device D019: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,131 - __main__ - ERROR - Error processing device D020: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U11')) -> None
+2025-03-11 14:04:13,132 - __main__ - ERROR - Error processing device D021: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U13')) -> None
+2025-03-11 14:04:13,133 - __main__ - ERROR - Error processing device D022: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,134 - __main__ - ERROR - Error processing device D023: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,134 - __main__ - ERROR - Error processing device D024: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U13')) -> None
+2025-03-11 14:04:13,135 - __main__ - ERROR - Error processing device D025: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U11')) -> None
+2025-03-11 14:04:13,136 - __main__ - ERROR - Error processing device D026: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,137 - __main__ - ERROR - Error processing device D027: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U22')) -> None
+2025-03-11 14:04:13,138 - __main__ - ERROR - Error processing device D028: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U14')) -> None
+2025-03-11 14:04:13,140 - __main__ - ERROR - Error processing device D029: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,141 - __main__ - ERROR - Error processing device D030: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U11')) -> None
+2025-03-11 14:04:13,143 - __main__ - ERROR - Error processing device D031: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U13')) -> None
+2025-03-11 14:04:13,144 - __main__ - ERROR - Error processing device D032: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,145 - __main__ - ERROR - Error processing device D033: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,146 - __main__ - ERROR - Error processing device D034: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U18')) -> None
+2025-03-11 14:04:13,147 - __main__ - ERROR - Error processing device D035: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U14')) -> None
+2025-03-11 14:04:13,148 - __main__ - ERROR - Error processing device D036: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U13')) -> None
+2025-03-11 14:04:13,148 - __main__ - ERROR - Error processing device D037: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,149 - __main__ - ERROR - Error processing device D038: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U17')) -> None
+2025-03-11 14:04:13,150 - __main__ - ERROR - Error processing device D039: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U18')) -> None
+2025-03-11 14:04:13,151 - __main__ - ERROR - Error processing device D040: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,152 - __main__ - ERROR - Error processing device D041: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U16')) -> None
+2025-03-11 14:04:13,153 - __main__ - ERROR - Error processing device D042: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U17')) -> None
+2025-03-11 14:04:13,163 - __main__ - ERROR - Error processing device D043: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,176 - __main__ - ERROR - Error processing device D044: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U13')) -> None
+2025-03-11 14:04:13,207 - __main__ - ERROR - Error processing device D045: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U11')) -> None
+2025-03-11 14:04:13,209 - __main__ - ERROR - Error processing device D046: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U13')) -> None
+2025-03-11 14:04:13,210 - __main__ - ERROR - Error processing device D047: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,211 - __main__ - ERROR - Error processing device D048: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,213 - __main__ - ERROR - Error processing device D049: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,224 - __main__ - ERROR - Error processing device D050: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U13')) -> None
+2025-03-11 14:04:13,226 - __main__ - ERROR - Error processing device D051: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,227 - __main__ - ERROR - Error processing device D052: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U18')) -> None
+2025-03-11 14:04:13,227 - __main__ - ERROR - Error processing device D053: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U13')) -> None
+2025-03-11 14:04:13,228 - __main__ - ERROR - Error processing device D054: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U11')) -> None
+2025-03-11 14:04:13,229 - __main__ - ERROR - Error processing device D055: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,230 - __main__ - ERROR - Error processing device D056: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U30')) -> None
+2025-03-11 14:04:13,231 - __main__ - ERROR - Error processing device D057: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,232 - __main__ - ERROR - Error processing device D058: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,233 - __main__ - ERROR - Error processing device D059: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U14')) -> None
+2025-03-11 14:04:13,233 - __main__ - ERROR - Error processing device D060: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U16')) -> None
+2025-03-11 14:04:13,235 - __main__ - ERROR - Error processing device D061: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,236 - __main__ - ERROR - Error processing device D062: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U14')) -> None
+2025-03-11 14:04:13,237 - __main__ - ERROR - Error processing device D063: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U18')) -> None
+2025-03-11 14:04:13,238 - __main__ - ERROR - Error processing device D064: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,239 - __main__ - ERROR - Error processing device D065: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U14')) -> None
+2025-03-11 14:04:13,240 - __main__ - ERROR - Error processing device D066: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U16')) -> None
+2025-03-11 14:04:13,241 - __main__ - ERROR - Error processing device D067: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,242 - __main__ - ERROR - Error processing device D068: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U22')) -> None
+2025-03-11 14:04:13,243 - __main__ - ERROR - Error processing device D069: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U11')) -> None
+2025-03-11 14:04:13,244 - __main__ - ERROR - Error processing device D070: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U11')) -> None
+2025-03-11 14:04:13,245 - __main__ - ERROR - Error processing device D071: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,246 - __main__ - ERROR - Error processing device D072: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,246 - __main__ - ERROR - Error processing device D073: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U18')) -> None
+2025-03-11 14:04:13,247 - __main__ - ERROR - Error processing device D074: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U11')) -> None
+2025-03-11 14:04:13,248 - __main__ - ERROR - Error processing device D075: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U16')) -> None
+2025-03-11 14:04:13,249 - __main__ - ERROR - Error processing device D076: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,250 - __main__ - ERROR - Error processing device D077: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,251 - __main__ - ERROR - Error processing device D078: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U17')) -> None
+2025-03-11 14:04:13,252 - __main__ - ERROR - Error processing device D079: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U13')) -> None
+2025-03-11 14:04:13,253 - __main__ - ERROR - Error processing device D080: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,254 - __main__ - ERROR - Error processing device D081: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U29')) -> None
+2025-03-11 14:04:13,255 - __main__ - ERROR - Error processing device D082: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,257 - __main__ - ERROR - Error processing device D083: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,258 - __main__ - ERROR - Error processing device D084: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U14')) -> None
+2025-03-11 14:04:13,258 - __main__ - ERROR - Error processing device D085: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U21')) -> None
+2025-03-11 14:04:13,259 - __main__ - ERROR - Error processing device D086: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U19')) -> None
+2025-03-11 14:04:13,261 - __main__ - ERROR - Error processing device D087: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U12')) -> None
+2025-03-11 14:04:13,261 - __main__ - ERROR - Error processing device D088: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U17')) -> None
+2025-03-11 14:04:13,262 - __main__ - ERROR - Error processing device D089: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,263 - __main__ - ERROR - Error processing device D090: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U18')) -> None
+2025-03-11 14:04:13,264 - __main__ - ERROR - Error processing device D091: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,265 - __main__ - ERROR - Error processing device D092: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,265 - __main__ - ERROR - Error processing device D093: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U11')) -> None
+2025-03-11 14:04:13,266 - __main__ - ERROR - Error processing device D094: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U13')) -> None
+2025-03-11 14:04:13,268 - __main__ - ERROR - Error processing device D095: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U15')) -> None
+2025-03-11 14:04:13,269 - __main__ - ERROR - Error processing device D096: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U13')) -> None
+2025-03-11 14:04:13,270 - __main__ - ERROR - Error processing device D097: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U10')) -> None
+2025-03-11 14:04:13,271 - __main__ - ERROR - Error processing device D098: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U18')) -> None
+2025-03-11 14:04:13,273 - __main__ - ERROR - Error processing device D099: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U18')) -> None
+2025-03-11 14:04:13,273 - __main__ - ERROR - Error processing device D100: ufunc 'add' did not contain a loop with signature matching types (dtype('float64'), dtype('<U19')) -> None
+2025-03-11 14:04:13,274 - __main__ - INFO - Analysis completed successfully
+2025-03-11 14:05:06,627 - __main__ - INFO - Starting equipment analysis
+2025-03-11 14:05:06,644 - __main__ - INFO - Device MRI Scanner scored 72.22
+2025-03-11 14:05:06,645 - __main__ - INFO - Device X-Ray Machine scored 57.46
+2025-03-11 14:05:06,646 - __main__ - INFO - Device Infusion Pump scored 100.04
+2025-03-11 14:05:06,647 - __main__ - INFO - Device ECG Machine scored 44.20
+2025-03-11 14:05:06,648 - __main__ - INFO - Device Ultrasound scored 67.30
+2025-03-11 14:05:06,649 - __main__ - INFO - Device CT Scanner scored 63.05
+2025-03-11 14:05:06,650 - __main__ - INFO - Device Defibrillator scored 50.14
+2025-03-11 14:05:06,651 - __main__ - INFO - Device Ventilator scored 68.68
+2025-03-11 14:05:06,652 - __main__ - INFO - Device Patient Monitor scored 63.44
+2025-03-11 14:05:06,653 - __main__ - INFO - Device Anesthesia Machine scored 61.02
+2025-03-11 14:05:06,654 - __main__ - INFO - Device Surgical Light scored 30.26
+2025-03-11 14:05:06,655 - __main__ - INFO - Device Surgical Table scored 28.79
+2025-03-11 14:05:06,655 - __main__ - INFO - Device Blood Gas Analyzer scored 51.19
+2025-03-11 14:05:06,656 - __main__ - INFO - Device Centrifuge scored 42.97
+2025-03-11 14:05:06,657 - __main__ - INFO - Device Microscope scored 33.04
+2025-03-11 14:05:06,657 - __main__ - INFO - Device Dialysis Machine scored 68.07
+2025-03-11 14:05:06,658 - __main__ - INFO - Device Mammography Unit scored 43.86
+2025-03-11 14:05:06,659 - __main__ - INFO - Device Portable X-Ray scored 49.76
+2025-03-11 14:05:06,660 - __main__ - INFO - Device Ultrasound scored 41.57
+2025-03-11 14:05:06,660 - __main__ - INFO - Device EEG Machine scored 41.44
+2025-03-11 14:05:06,661 - __main__ - INFO - Device Infusion Pump scored 41.03
+2025-03-11 14:05:06,662 - __main__ - INFO - Device Patient Monitor scored 45.50
+2025-03-11 14:05:06,663 - __main__ - INFO - Device Ventilator scored 50.21
+2025-03-11 14:05:06,664 - __main__ - INFO - Device Defibrillator scored 40.95
+2025-03-11 14:05:06,664 - __main__ - INFO - Device ECG Machine scored 34.62
+2025-03-11 14:05:06,665 - __main__ - INFO - Device Ultrasound scored 42.70
+2025-03-11 14:05:06,667 - __main__ - INFO - Device Blood Pressure Monitor scored 39.31
+2025-03-11 14:05:06,668 - __main__ - INFO - Device Pulse Oximeter scored 40.36
+2025-03-11 14:05:06,668 - __main__ - INFO - Device CT Scanner scored 47.41
+2025-03-11 14:05:06,671 - __main__ - INFO - Device MRI Scanner scored 58.49
+2025-03-11 14:05:06,672 - __main__ - INFO - Device X-Ray Machine scored 44.53
+2025-03-11 14:05:06,673 - __main__ - INFO - Device Ultrasound scored 35.57
+2025-03-11 14:05:06,674 - __main__ - INFO - Device Patient Monitor scored 39.85
+2025-03-11 14:05:06,674 - __main__ - INFO - Device Anesthesia Machine scored 46.27
+2025-03-11 14:05:06,675 - __main__ - INFO - Device Surgical Light scored 26.89
+2025-03-11 14:05:06,676 - __main__ - INFO - Device Infusion Pump scored 37.80
+2025-03-11 14:05:06,677 - __main__ - INFO - Device Patient Monitor scored 39.11
+2025-03-11 14:05:06,677 - __main__ - INFO - Device Chemotherapy Pump scored 47.10
+2025-03-11 14:05:06,678 - __main__ - INFO - Device Blood Gas Analyzer scored 45.84
+2025-03-11 14:05:06,679 - __main__ - INFO - Device Ventilator scored 41.81
+2025-03-11 14:05:06,680 - __main__ - INFO - Device Infant Incubator scored 40.33
+2025-03-11 14:05:06,681 - __main__ - INFO - Device Phototherapy Unit scored 36.17
+2025-03-11 14:05:06,682 - __main__ - INFO - Device Patient Monitor scored 40.36
+2025-03-11 14:05:06,683 - __main__ - INFO - Device Infusion Pump scored 38.12
+2025-03-11 14:05:06,684 - __main__ - INFO - Device ECG Machine scored 36.26
+2025-03-11 14:05:06,684 - __main__ - INFO - Device Defibrillator scored 43.32
+2025-03-11 14:05:06,685 - __main__ - INFO - Device Ultrasound scored 34.37
+2025-03-11 14:05:06,686 - __main__ - INFO - Device Patient Monitor scored 38.42
+2025-03-11 14:05:06,687 - __main__ - INFO - Device Ventilator scored 42.45
+2025-03-11 14:05:06,687 - __main__ - INFO - Device X-Ray Machine scored 42.68
+2025-03-11 14:05:06,688 - __main__ - INFO - Device CT Scanner scored 46.86
+2025-03-11 14:05:06,689 - __main__ - INFO - Device Blood Gas Analyzer scored 38.93
+2025-03-11 14:05:06,690 - __main__ - INFO - Device Defibrillator scored 37.87
+2025-03-11 14:05:06,691 - __main__ - INFO - Device ECG Machine scored 31.68
+2025-03-11 14:05:06,691 - __main__ - INFO - Device Patient Monitor scored 37.69
+2025-03-11 14:05:06,692 - __main__ - INFO - Device Cardiac Catheterization System scored 40.00
+2025-03-11 14:05:06,693 - __main__ - INFO - Device Ultrasound scored 36.08
+2025-03-11 14:05:06,693 - __main__ - INFO - Device Patient Monitor scored 39.03
+2025-03-11 14:05:06,694 - __main__ - INFO - Device Surgical Light scored 27.20
+2025-03-11 14:05:06,695 - __main__ - INFO - Device Endoscopy System scored 39.45
+2025-03-11 14:05:06,696 - __main__ - INFO - Device Patient Monitor scored 38.57
+2025-03-11 14:05:06,696 - __main__ - INFO - Device Surgical Light scored 24.18
+2025-03-11 14:05:06,697 - __main__ - INFO - Device Anesthesia Machine scored 48.12
+2025-03-11 14:05:06,698 - __main__ - INFO - Device Patient Monitor scored 41.53
+2025-03-11 14:05:06,699 - __main__ - INFO - Device Surgical Table scored 22.90
+2025-03-11 14:05:06,699 - __main__ - INFO - Device Dialysis Machine scored 51.61
+2025-03-11 14:05:06,700 - __main__ - INFO - Device Patient Monitor scored 39.27
+2025-03-11 14:05:06,701 - __main__ - INFO - Device Blood Pressure Monitor scored 40.15
+2025-03-11 14:05:06,702 - __main__ - INFO - Device MRI Scanner scored 52.63
+2025-03-11 14:05:06,703 - __main__ - INFO - Device EEG Machine scored 34.63
+2025-03-11 14:05:06,704 - __main__ - INFO - Device Patient Monitor scored 39.44
+2025-03-11 14:05:06,705 - __main__ - INFO - Device CT Scanner scored 44.64
+2025-03-11 14:05:06,705 - __main__ - INFO - Device Linear Accelerator scored 42.55
+2025-03-11 14:05:06,706 - __main__ - INFO - Device PET Scanner scored 41.54
+2025-03-11 14:05:06,707 - __main__ - INFO - Device Mammography Unit scored 37.25
+2025-03-11 14:05:06,708 - __main__ - INFO - Device Ultrasound scored 34.59
+2025-03-11 14:05:06,709 - __main__ - INFO - Device Patient Monitor scored 38.21
+2025-03-11 14:05:06,710 - __main__ - INFO - Device Bone Densitometer scored 33.34
+2025-03-11 14:05:06,710 - __main__ - INFO - Device X-Ray Machine scored 46.01
+2025-03-11 14:05:06,711 - __main__ - INFO - Device Patient Monitor scored 39.82
+2025-03-11 14:05:06,712 - __main__ - INFO - Device Respiratory Function Analyzer scored 39.81
+2025-03-11 14:05:06,713 - __main__ - INFO - Device Patient Monitor scored 39.16
+2025-03-11 14:05:06,713 - __main__ - INFO - Device Ventilator scored 45.61
+2025-03-11 14:05:06,715 - __main__ - INFO - Device Ophthalmoscope scored 34.06
+2025-03-11 14:05:06,716 - __main__ - INFO - Device Visual Field Analyzer scored 35.65
+2025-03-11 14:05:06,716 - __main__ - INFO - Device Surgical Microscope scored 36.30
+2025-03-11 14:05:06,717 - __main__ - INFO - Device Dental X-Ray scored 37.93
+2025-03-11 14:05:06,718 - __main__ - INFO - Device Dental Chair Unit scored 28.73
+2025-03-11 14:05:06,719 - __main__ - INFO - Device Sterilizer scored 38.50
+2025-03-11 14:05:06,719 - __main__ - INFO - Device Washer Disinfector scored 37.95
+2025-03-11 14:05:06,720 - __main__ - INFO - Device Ultrasound scored 37.57
+2025-03-11 14:05:06,721 - __main__ - INFO - Device Patient Monitor scored 39.67
+2025-03-11 14:05:06,722 - __main__ - INFO - Device ECG Machine scored 30.80
+2025-03-11 14:05:06,723 - __main__ - INFO - Device X-Ray Machine scored 41.50
+2025-03-11 14:05:06,723 - __main__ - INFO - Device Patient Monitor scored 40.32
+2025-03-11 14:05:06,724 - __main__ - INFO - Device Defibrillator scored 38.24
+2025-03-11 14:05:06,725 - __main__ - INFO - Device Ultrasound scored 35.59
+2025-03-11 14:05:06,726 - __main__ - INFO - Device Blood Gas Analyzer scored 37.98
+2025-03-11 14:05:06,726 - __main__ - INFO - Device Chemistry Analyzer scored 43.43
+2025-03-11 14:05:06,727 - __main__ - INFO - Device Hematology Analyzer scored 39.05
+2025-03-11 14:05:06,790 - __main__ - INFO - Analysis completed successfully

@@ -6,6 +6,7 @@ import sys
 from unittest.mock import patch, MagicMock
 import tempfile
 import json
+import os
 
 # Add parent directory to path to import main module
 sys.path.append(str(Path(__file__).parent.parent))
@@ -22,13 +23,16 @@ from main import (
     generate_forecast,
     save_utilization_cache
 )
+from data_processing import (
+    PURCHASE_DATE_COLUMN
+)
 
 @pytest.fixture
 def sample_devices():
     return pd.DataFrame({
         'DeviceID': ['D1', 'D2'],
         'DeviceType': ['MRI', 'CT'],
-        'PurchaseDate': [
+        PURCHASE_DATE_COLUMN: [
             datetime.now() - timedelta(days=365*2),
             datetime.now() - timedelta(days=365*5)
         ],
