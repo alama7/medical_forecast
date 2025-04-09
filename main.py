@@ -12,7 +12,11 @@ from data_processing import (
     calculate_price,
     estimate_missing_costs,
     MARKET_PRICES,
-    PURCHASE_DATE_COLUMN
+    PURCHASE_DATE_COLUMN,
+    get_expected_lifecycle,
+    load_or_create_lifecycle_cache,
+    categorize_maintenance_type,
+    batch_categorize_maintenance_types
 )
 
 # Set up logging first
@@ -103,15 +107,19 @@ def load_data() -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
         tuple: (devices DataFrame, work orders DataFrame, replacement costs dict)
     """
     try:
+        # Ensure data directory exists
+        data_dir = Path(CONFIG['DATA_DIR'])
+        if not data_dir.exists():
+            logger.info(f"Creating data directory at {data_dir}")
+            data_dir.mkdir(parents=True, exist_ok=True)
+            
         devices = pd.read_csv(Path(CONFIG['DEVICES_FILE']))
         # Ensure PurchaseDate is converted to datetime
         if PURCHASE_DATE_COLUMN in devices.columns:
             devices[PURCHASE_DATE_COLUMN] = pd.to_datetime(devices[PURCHASE_DATE_COLUMN], errors='coerce')
             
-        # Load work orders and ensure Date is converted to datetime
+        # Load work orders
         work_orders = pd.read_csv(Path(CONFIG['WORK_ORDERS_FILE']))
-        if 'Date' in work_orders.columns:
-            work_orders['Date'] = pd.to_datetime(work_orders['Date'], errors='coerce')
             
         replacement_costs_df = pd.read_csv(Path(CONFIG['REPLACEMENT_COSTS_FILE']))
         replacement_costs = dict(zip(
@@ -195,13 +203,18 @@ def calculate_device_scores(devices: pd.DataFrame,
     
     Args:
         devices: DataFrame containing device information
-        work_orders: DataFrame containing maintenance records
-        replacement_costs: Dictionary of replacement costs by device type
+        work_orders: DataFrame containing work order information
+        replacement_costs: Dictionary of replacement costs
         utilization_cache: Dictionary of device utilization rates
     
     Returns:
-        List of dictionaries containing device scores
+        List[Dict]: List of device scores
     """
+    logger.info("Calculating device scores...")
+    
+    # Load lifecycle cache
+    lifecycle_cache = load_or_create_lifecycle_cache()
+    
     device_scores = []
     
     for index, row in devices.iterrows():
@@ -209,13 +222,11 @@ def calculate_device_scores(devices: pd.DataFrame,
             device_id = row['DeviceID']
             device_type = row['DeviceType']
             
-            if pd.isna(row['ExpectedLifecycle (years)']):
-                logger.warning(f"Missing lifecycle data for device {device_id}")
-                continue
+            # Get expected lifecycle using our new function
+            expected_lifecycle = get_expected_lifecycle(device_type, lifecycle_cache)
                 
             # Calculate device age score
             device_age = calculate_device_age(row[PURCHASE_DATE_COLUMN])
-            expected_lifecycle = row['ExpectedLifecycle (years)']
             age_score = (device_age / expected_lifecycle) * 100
 
             # Calculate maintenance cost score
@@ -256,14 +267,39 @@ def calculate_device_scores(devices: pd.DataFrame,
     return device_scores
 
 def calculate_maintenance_history_score(device_id: str, work_orders: pd.DataFrame) -> float:
-    """Calculate maintenance history score for a device."""
-    wo_device = work_orders[work_orders['DeviceID'] == device_id]
-    functional_issues = wo_device[wo_device['MaintenanceType'] == 'Repair'].shape[0]
-    cosmetic_issues = wo_device[wo_device['MaintenanceType'] == 'Cosmetic'].shape[0]
+    """
+    Calculate maintenance history score for a device based on the types of maintenance performed.
     
+    Each maintenance type has a different multiplier:
+    - Cosmetic: multiplier of 2
+    - User Error: multiplier of 1
+    - Repair: multiplier of 3
+    - Software: multiplier of 2
+    - PM (Preventive Maintenance): multiplier of 0
+    
+    Args:
+        device_id: ID of the device
+        work_orders: DataFrame containing maintenance records
+        
+    Returns:
+        float: Maintenance history score
+    """
+    wo_device = work_orders[work_orders['DeviceID'] == device_id]
+    
+    # Count occurrences of each maintenance type
+    cosmetic_issues = wo_device[wo_device['MaintenanceType'] == 'Cosmetic'].shape[0]
+    user_error_issues = wo_device[wo_device['MaintenanceType'] == 'User Error'].shape[0]
+    repair_issues = wo_device[wo_device['MaintenanceType'] == 'Repair'].shape[0]
+    software_issues = wo_device[wo_device['MaintenanceType'] == 'Software'].shape[0]
+    pm_issues = wo_device[wo_device['MaintenanceType'] == 'PM'].shape[0]
+    
+    # Calculate weighted score
     return (
-        (functional_issues * CONFIG['MAINTENANCE_WEIGHTS']['REPAIR_MULTIPLIER'] +
-         cosmetic_issues * CONFIG['MAINTENANCE_WEIGHTS']['COSMETIC_MULTIPLIER']) *
+        (cosmetic_issues * CONFIG['MAINTENANCE_WEIGHTS']['COSMETIC_MULTIPLIER'] +
+         user_error_issues * CONFIG['MAINTENANCE_WEIGHTS']['USER_ERROR_MULTIPLIER'] +
+         repair_issues * CONFIG['MAINTENANCE_WEIGHTS']['REPAIR_MULTIPLIER'] +
+         software_issues * CONFIG['MAINTENANCE_WEIGHTS']['SOFTWARE_MULTIPLIER'] +
+         pm_issues * CONFIG['MAINTENANCE_WEIGHTS']['PM_MULTIPLIER']) *
         CONFIG['MAINTENANCE_WEIGHTS']['SCORE_MULTIPLIER']
     )
 
@@ -295,7 +331,10 @@ def generate_forecast(device_scores: List[Dict],
                      replacement_costs: Dict[str, float]) -> List[Dict]:
     """Generate replacement forecast for the next 5 years."""
     forecast = []
-    remaining_devices = device_scores.copy()
+    
+    # Sort device_scores by TotalScore in descending order (highest priority first)
+    sorted_device_scores = sorted(device_scores, key=lambda x: x['TotalScore'], reverse=True)
+    remaining_devices = sorted_device_scores.copy()
     
     for year in range(1, 6):
         yearly_replacements = []
@@ -346,38 +385,309 @@ def save_utilization_cache(cache: Dict[str, float]):
                           columns=['DeviceType', 'UtilizationRate'])
     cache_df.to_csv(CONFIG['UTILIZATION_CACHE_FILE'], index=False)
 
+def preprocess_work_orders(work_orders: pd.DataFrame, batch_size: int = 10) -> pd.DataFrame:
+    """
+    Preprocess work orders data to ensure it has the MaintenanceType column.
+    Uses ChatGPT to categorize work orders based on their description and type.
+    Processes work orders in batches for efficiency.
+    
+    Args:
+        work_orders: DataFrame containing work order records
+        batch_size: Number of work orders to process in a single API call
+        
+    Returns:
+        pd.DataFrame: Preprocessed work orders DataFrame
+    """
+    # Make a copy to avoid modifying the original DataFrame
+    work_orders = work_orders.copy()
+    
+    # Ensure Date column is datetime type
+    if 'Date' in work_orders.columns and not pd.api.types.is_datetime64_dtype(work_orders['Date']):
+        logger.info("Converting Date column to datetime type")
+        work_orders['Date'] = pd.to_datetime(work_orders['Date'], errors='coerce')
+    
+    # Check if we need to categorize work orders
+    if 'MaintenanceType' not in work_orders.columns or work_orders['MaintenanceType'].isna().any():
+        logger.info("Categorizing work orders using ChatGPT")
+        
+        # Create a temporary column for work order type if it exists
+        work_order_type_col = None
+        for possible_col in ['WorkOrderType', 'Type', 'Category', 'MaintenanceCategory']:
+            if possible_col in work_orders.columns:
+                work_order_type_col = possible_col
+                break
+        
+        # Prepare data for batch processing
+        work_orders_to_categorize = []
+        indices_to_categorize = []
+        
+        # Identify which rows need categorization
+        for idx, row in work_orders.iterrows():
+            if 'MaintenanceType' not in work_orders.columns or pd.isna(row.get('MaintenanceType')):
+                order_data = {}
+                
+                # Add description if available
+                if 'Description' in work_orders.columns:
+                    order_data['description'] = row['Description']
+                
+                # Add work order type if available
+                if work_order_type_col:
+                    order_data['work_order_type'] = row[work_order_type_col]
+                
+                # Only add if we have some data to categorize
+                if order_data:
+                    work_orders_to_categorize.append(order_data)
+                    indices_to_categorize.append(idx)
+        
+        # If we have work orders to categorize
+        if work_orders_to_categorize:
+            logger.info(f"Batch processing {len(work_orders_to_categorize)} work orders")
+            
+            # Use batch categorization
+            categories = batch_categorize_maintenance_types(work_orders_to_categorize, batch_size)
+            
+            # Create MaintenanceType column if it doesn't exist
+            if 'MaintenanceType' not in work_orders.columns:
+                work_orders['MaintenanceType'] = None
+            
+            # Update the DataFrame with the categorized values
+            for i, idx in enumerate(indices_to_categorize):
+                if i < len(categories):
+                    work_orders.at[idx, 'MaintenanceType'] = categories[i]
+                else:
+                    # Default to Repair if we somehow didn't get a category
+                    work_orders.at[idx, 'MaintenanceType'] = 'Repair'
+        else:
+            # No data to categorize, default to Repair
+            logger.warning("No data available for categorization. Using default categorization.")
+            work_orders['MaintenanceType'] = 'Repair'
+    else:
+        # MaintenanceType column already exists and has no NaN values
+        # Still standardize it using our categorization function
+        logger.info("Standardizing existing MaintenanceType column")
+        
+        # Prepare data for batch processing
+        work_orders_to_standardize = []
+        indices_to_standardize = []
+        
+        for idx, row in work_orders.iterrows():
+            work_orders_to_standardize.append({
+                'description': row['MaintenanceType']
+            })
+            indices_to_standardize.append(idx)
+        
+        # Use batch categorization for standardization
+        standardized_categories = batch_categorize_maintenance_types(work_orders_to_standardize, batch_size)
+        
+        # Update the DataFrame with the standardized values
+        for i, idx in enumerate(indices_to_standardize):
+            if i < len(standardized_categories):
+                work_orders.at[idx, 'MaintenanceType'] = standardized_categories[i]
+    
+    return work_orders
 
+def calculate_fleet_scores(devices: pd.DataFrame, 
+                          work_orders: pd.DataFrame, 
+                          replacement_costs: Dict[str, float],
+                          utilization_cache: Dict[str, float]) -> List[Dict]:
+    """
+    Calculate scores for each device fleet based on various factors.
+    
+    Args:
+        devices: DataFrame containing device information
+        work_orders: DataFrame containing work order information
+        replacement_costs: Dictionary of replacement costs
+        utilization_cache: Dictionary of device utilization rates
+    
+    Returns:
+        List[Dict]: List of fleet scores
+    """
+    logger.info("Calculating fleet scores...")
+    
+    # Load lifecycle cache
+    lifecycle_cache = load_or_create_lifecycle_cache()
+    
+    # Group devices by type
+    device_groups = devices.groupby('DeviceType')
+    
+    fleet_scores = []
+    
+    for device_type, fleet_devices in device_groups:
+        try:
+            # Calculate fleet-level metrics
+            fleet_size = len(fleet_devices)
+            
+            # Calculate average age score for the fleet
+            fleet_ages = [calculate_device_age(row[PURCHASE_DATE_COLUMN]) for _, row in fleet_devices.iterrows()]
+            avg_fleet_age = sum(fleet_ages) / fleet_size if fleet_size > 0 else 0
+            
+            # Get expected lifecycle for this device type
+            expected_lifecycle = get_expected_lifecycle(device_type, lifecycle_cache)
+            age_score = (avg_fleet_age / expected_lifecycle) * 100
+            
+            # Calculate fleet maintenance cost score
+            fleet_maintenance_costs = []
+            for _, device in fleet_devices.iterrows():
+                annual_cost = calculate_annual_maintenance_cost(device['DeviceID'], CONFIG['ANALYSIS_YEAR'], work_orders)
+                fleet_maintenance_costs.append(annual_cost)
+            
+            avg_maintenance_cost = sum(fleet_maintenance_costs) / fleet_size if fleet_size > 0 else 0
+            replacement_cost = replacement_costs.get(device_type, CONFIG['DEFAULT_REPLACEMENT_COST'])
+            maintenance_cost_score = (avg_maintenance_cost / replacement_cost) * 100
+            
+            # Calculate fleet risk score (use highest risk in the fleet)
+            risk_scores = [CONFIG['RISK_SCORES'][row['RiskClass']] for _, row in fleet_devices.iterrows()]
+            risk_score = max(risk_scores) if risk_scores else 0
+            
+            # Calculate fleet maintenance history score
+            fleet_maintenance_scores = []
+            for _, device in fleet_devices.iterrows():
+                history_score = calculate_maintenance_history_score(device['DeviceID'], work_orders)
+                fleet_maintenance_scores.append(history_score)
+            
+            maintenance_history_score = sum(fleet_maintenance_scores) / fleet_size if fleet_size > 0 else 0
+            
+            # Calculate fleet location score (use highest location score in the fleet)
+            location_scores = [calculate_location_score(row['Location']) for _, row in fleet_devices.iterrows()]
+            location_score = max(location_scores) if location_scores else 0
+            
+            # Calculate fleet utilization score
+            utilization_rate = get_utilization_rate(device_type, utilization_cache)
+            utilization_score = (utilization_rate / 24) * 100
+            
+            # Calculate total fleet score
+            total_score = calculate_total_score(
+                age_score, maintenance_cost_score, risk_score,
+                maintenance_history_score, location_score, utilization_score
+            )
+            
+            # Calculate fleet replacement cost (cost to replace entire fleet)
+            fleet_replacement_cost = replacement_cost * fleet_size
+            
+            logger.info(f"Fleet {device_type} scored {total_score:.2f}")
+            
+            fleet_scores.append({
+                'DeviceType': device_type,
+                'FleetSize': fleet_size,
+                'TotalScore': total_score,
+                'FleetReplacementCost': fleet_replacement_cost,
+                'DeviceIDs': fleet_devices['DeviceID'].tolist()
+            })
+            
+        except Exception as e:
+            logger.error(f"Error processing fleet {device_type}: {e}")
+            continue
+    
+    return fleet_scores
+
+def generate_fleet_forecast(fleet_scores: List[Dict], 
+                          devices: pd.DataFrame,
+                          replacement_costs: Dict[str, float]) -> List[Dict]:
+    """Generate replacement forecast for the next 5 years at the fleet level."""
+    forecast = []
+    
+    # Sort fleet_scores by TotalScore in descending order (highest priority first)
+    sorted_fleet_scores = sorted(fleet_scores, key=lambda x: x['TotalScore'], reverse=True)
+    remaining_fleets = sorted_fleet_scores.copy()
+    
+    for year in range(1, 6):
+        yearly_replacements = []
+        fleet_costs = {}  # Dictionary to track fleet costs
+        remaining_budget = CONFIG['ANNUAL_BUDGET']
+        
+        for fleet in remaining_fleets[:]:  # Use slice to avoid modification during iteration
+            try:
+                fleet_replacement_cost = fleet['FleetReplacementCost']
+                
+                # Check if we can replace the entire fleet
+                if remaining_budget >= fleet_replacement_cost:
+                    yearly_replacements.append({
+                        'DeviceType': fleet['DeviceType'],
+                        'FleetSize': fleet['FleetSize'],
+                        'DeviceIDs': fleet['DeviceIDs']
+                    })
+                    fleet_costs[fleet['DeviceType']] = fleet_replacement_cost
+                    remaining_budget -= fleet_replacement_cost
+                    remaining_fleets.remove(fleet)
+                else:
+                    # If we can't replace the entire fleet, check if we can do a partial replacement
+                    # This is a strategic decision - you might want to replace a portion of the fleet
+                    # to spread the cost over multiple years
+                    if fleet['TotalScore'] > CONFIG['HIGH_PRIORITY_THRESHOLD']:
+                        # For high-priority fleets, recommend replacing at least 20% of the fleet
+                        min_replacement_size = max(1, int(fleet['FleetSize'] * 0.2))
+                        partial_cost = replacement_costs.get(fleet['DeviceType'], CONFIG['DEFAULT_REPLACEMENT_COST']) * min_replacement_size
+                        
+                        if remaining_budget >= partial_cost:
+                            # Select the oldest devices in the fleet for replacement
+                            fleet_devices = devices[devices['DeviceType'] == fleet['DeviceType']]
+                            fleet_devices = fleet_devices.sort_values(by=PURCHASE_DATE_COLUMN)
+                            devices_to_replace = fleet_devices.head(min_replacement_size)['DeviceID'].tolist()
+                            
+                            yearly_replacements.append({
+                                'DeviceType': fleet['DeviceType'],
+                                'FleetSize': min_replacement_size,
+                                'DeviceIDs': devices_to_replace,
+                                'IsPartialReplacement': True
+                            })
+                            fleet_costs[fleet['DeviceType']] = partial_cost
+                            remaining_budget -= partial_cost
+            except Exception as e:
+                logger.error(f"Error processing fleet {fleet['DeviceType']}: {e}")
+                continue
+        
+        total_cost = sum(fleet_costs.values())
+        
+        forecast.append({
+            'Year': datetime.now().year + year,
+            'FleetsToReplace': yearly_replacements,
+            'FleetCosts': fleet_costs,
+            'TotalCost': total_cost,
+            'RemainingBudget': remaining_budget
+        })
+    
+    return forecast
+
+def output_fleet_forecast(forecast: List[Dict]):
+    """Output the fleet forecast results."""
+    print("\nFleet Replacement Forecast for Next 5 Years:")
+    for entry in forecast:
+        print(f"\nYear {entry['Year']}:")
+        print("Fleets to Replace:")
+        if 'FleetCosts' in entry:
+            for device_type, cost in entry['FleetCosts'].items():
+                fleet_info = next((f for f in entry['FleetsToReplace'] if f['DeviceType'] == device_type), None)
+                if fleet_info:
+                    replacement_type = "Partial" if fleet_info.get('IsPartialReplacement', False) else "Complete"
+                    print(f"- {device_type}: {replacement_type} replacement of {fleet_info['FleetSize']} devices: ${cost:,.2f}")
+        print(f"Total Cost: ${entry['TotalCost']:,.2f}")
+        print(f"Remaining Budget: ${entry['RemainingBudget']:,.2f}")
 
 def main():
+    """Main function to run the equipment analysis."""
     try:
-        # Ensure data directory exists
-        data_dir = Path(CONFIG['DATA_DIR'])
-        if not data_dir.exists():
-            logger.info(f"Creating data directory at {data_dir}")
-            data_dir.mkdir(parents=True, exist_ok=True)
-        
         logger.info("Starting equipment analysis")
         
-        # Load all required data
+        # Load data
         devices, work_orders, replacement_costs = load_data()
         utilization_cache = load_or_create_utilization_cache()
         
-        # Process devices and calculate scores
-        device_scores = calculate_device_scores(
-            devices, 
-            work_orders, 
-            replacement_costs, 
-            utilization_cache
-        )
+        # Preprocess work orders to ensure MaintenanceType column exists
+        # Use the batch size from config
+        work_orders = preprocess_work_orders(work_orders, 
+                                           batch_size=CONFIG['MAINTENANCE_CATEGORIZATION']['BATCH_SIZE'])
         
-        # Generate and output forecast
-        forecast = generate_forecast(device_scores, devices, replacement_costs)
-        output_forecast(forecast)
+        # Process devices and calculate fleet scores
+        fleet_scores = calculate_fleet_scores(devices, work_orders, replacement_costs, utilization_cache)
         
-        logger.info("Analysis completed successfully")
+        # Generate and output fleet forecast
+        forecast = generate_fleet_forecast(fleet_scores, devices, replacement_costs)
+        output_fleet_forecast(forecast)
+        
+        logger.info("Equipment analysis completed successfully")
         
     except Exception as e:
-        logger.error(f"Analysis failed: {e}")
+        logger.error(f"Error in main function: {e}")
         raise
 
 if __name__ == "__main__":

@@ -1,0 +1,55 @@
+# Changes Made to Implement Fleet-Level Replacement Strategies
+
+## Overview
+The codebase has been modified to recommend fleet-level replacements rather than individual device replacements, which is more practical for medical facilities. This document outlines the key changes made to implement this strategy.
+
+## New Functions Added
+
+### 1. `calculate_fleet_scores`
+- Groups devices by their type (creating fleets)
+- Calculates fleet-level metrics:
+  - Average age of the fleet
+  - Average maintenance costs
+  - Highest risk level in the fleet (using the most critical device)
+  - Average maintenance history score
+  - Highest location score (using the most critical location)
+  - Utilization rate specific to the device type
+- Assigns a total score to each fleet based on these metrics
+- Calculates the total replacement cost for the entire fleet
+
+### 2. `generate_fleet_forecast`
+- Prioritizes fleets based on their total score
+- For each year in the forecast:
+  - Attempts to replace entire fleets when budget allows
+  - For high-priority fleets (score > 75), recommends partial replacements when full replacement isn't possible
+  - For partial replacements, selects the oldest devices in the fleet (20% of the fleet size)
+  - Tracks both complete and partial fleet replacements
+
+### 3. `output_fleet_forecast`
+- Clearly indicates whether a replacement is complete or partial
+- Shows the number of devices being replaced in each fleet
+- Provides cost information at the fleet level
+- Maintains the annual budget tracking
+
+## Configuration Changes
+
+Added a new parameter to the config file:
+- `HIGH_PRIORITY_THRESHOLD`: Set to 75, this determines when a fleet should be considered for partial replacement if a full replacement isn't possible within the budget.
+
+## Main Function Changes
+
+Modified the `main()` function to:
+- Use the new fleet-level scoring and forecasting functions
+- Output fleet-level replacement recommendations
+
+## Benefits of Fleet-Level Replacement Strategy
+
+1. **Strategic Planning**: Facilities can now plan replacements at the fleet level, which is more practical for budgeting and operations.
+
+2. **Partial Replacement Option**: For high-priority fleets that can't be fully replaced due to budget constraints, the system recommends replacing the oldest 20% of devices, allowing for phased replacement.
+
+3. **Risk Management**: By considering the highest risk level in a fleet, the system ensures that critical devices are prioritized.
+
+4. **Cost Efficiency**: Replacing entire fleets can often be more cost-effective than individual replacements due to potential volume discounts and reduced administrative overhead.
+
+5. **Operational Continuity**: Fleet-level replacements allow for better planning of downtime and training. 
