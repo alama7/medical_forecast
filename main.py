@@ -744,6 +744,10 @@ def generate_unconstrained_forecast(fleet_scores: List[Dict],
             # Device is newer, recommend replacement at expected end-of-life
             replacement_year = current_year + int((1 - age_factor) * expected_lifecycle)
         
+        # Limit replacement year to 10 years from now
+        max_replacement_year = current_year + 10
+        replacement_year = min(replacement_year, max_replacement_year)
+        
         fleet_replacements.append({
             'DeviceType': device_type,
             'FleetSize': fleet['FleetSize'],
@@ -757,8 +761,8 @@ def generate_unconstrained_forecast(fleet_scores: List[Dict],
         })
     
     # Group replacements by year
-    # Find the maximum year in the forecast
-    max_year = max(f['ReplacementYear'] for f in fleet_replacements)
+    # Find the maximum year in the forecast (limited to 10 years)
+    max_year = min(max(f['ReplacementYear'] for f in fleet_replacements), current_year + 10)
     
     # Create forecast entries for each year from current year to max year
     for year in range(current_year, max_year + 1):
@@ -821,6 +825,74 @@ def output_fleet_forecast(forecast: List[Dict], annual_budget: Optional[float] =
         if entry.get('IsUnconstrained', False):
             print("(Based on scores and age, not budget-constrained)")
 
+def export_forecast_to_csv(forecast: List[Dict], annual_budget: Optional[float] = None) -> str:
+    """
+    Export the fleet forecast results to a CSV file.
+    
+    Args:
+        forecast: List of forecast entries
+        annual_budget: Optional annual budget
+        
+    Returns:
+        str: Path to the exported CSV file
+    """
+    # Create a list to store flattened forecast data
+    csv_data = []
+    
+    # Determine forecast type
+    forecast_type = "unconstrained" if annual_budget is None else "budget_constrained"
+    
+    # Flatten the forecast data for CSV format
+    for entry in forecast:
+        year = entry['Year']
+        total_cost = entry['TotalCost']
+        remaining_budget = entry.get('RemainingBudget', None)
+        
+        # Process each fleet in the year
+        for fleet in entry['FleetsToReplace']:
+            device_type = fleet['DeviceType']
+            fleet_size = fleet['FleetSize']
+            replacement_cost = entry['FleetCosts'].get(device_type, 0)
+            
+            # Determine replacement type
+            replacement_type = "Partial" if fleet.get('IsPartialReplacement', False) else "Complete"
+            
+            # Create a row for the CSV
+            row = {
+                'Year': year,
+                'DeviceType': device_type,
+                'FleetSize': fleet_size,
+                'ReplacementType': replacement_type,
+                'ReplacementCost': replacement_cost,
+                'TotalYearCost': total_cost,
+                'RemainingBudget': remaining_budget,
+                'ForecastType': forecast_type
+            }
+            
+            # Add unconstrained forecast specific fields
+            if entry.get('IsUnconstrained', False):
+                row.update({
+                    'Score': fleet.get('Score', 'N/A'),
+                    'AvgAge': fleet.get('AvgAge', 'N/A'),
+                    'ExpectedLifecycle': fleet.get('ExpectedLifecycle', 'N/A'),
+                    'YearsUntilReplacement': fleet.get('YearsUntilReplacement', 'N/A')
+                })
+            
+            csv_data.append(row)
+    
+    # Create DataFrame from the flattened data
+    df = pd.DataFrame(csv_data)
+    
+    # Generate filename with timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"fleet_forecast_{forecast_type}_{timestamp}.csv"
+    
+    # Export to CSV
+    df.to_csv(filename, index=False)
+    logger.info(f"Forecast exported to {filename}")
+    
+    return filename
+
 def main(annual_budget: Optional[float] = None):
     """
     Main function to run the equipment analysis.
@@ -846,6 +918,10 @@ def main(annual_budget: Optional[float] = None):
         # Generate and output fleet forecast
         forecast = generate_fleet_forecast(fleet_scores, devices, replacement_costs, annual_budget)
         output_fleet_forecast(forecast, annual_budget)
+        
+        # Export forecast to CSV
+        csv_file = export_forecast_to_csv(forecast, annual_budget)
+        print(f"\nForecast exported to CSV file: {csv_file}")
         
         logger.info("Equipment analysis completed successfully")
         

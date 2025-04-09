@@ -74,7 +74,7 @@ Modified the `main()` function to:
   - If score is low, extends replacement timeline
   - If score is high, recommends replacement at expected end-of-life
 - For newer devices, recommends replacement based on expected lifecycle
-- Creates a forecast that spans multiple years (not limited to 5 years)
+- Limits the forecast to a maximum of 10 years from the current year
 
 ### 3. Enhanced Output
 - Updated output to clearly indicate whether recommendations are budget-constrained or unconstrained
@@ -99,4 +99,28 @@ Modified the `main()` function to:
 
 3. **Long-Term Strategic Planning**: Facilities receive a comprehensive long-term replacement plan that aligns with both device lifecycles and performance.
 
-4. **Cost Optimization**: By extending the life of well-performing devices, even if they're older, the system helps optimize long-term costs. 
+4. **Cost Optimization**: By extending the life of well-performing devices, even if they're older, the system helps optimize long-term costs.
+
+## Additional Feature: CSV Export
+
+### 1. New Function: `export_forecast_to_csv`
+- Exports the forecast data to a CSV file for easier analysis and sharing
+- Flattens the nested forecast data into a tabular format suitable for CSV
+- Includes all relevant information including year, device type, fleet size, replacement type, costs, and forecast type
+- For unconstrained forecasts, also includes additional metrics like score, average age, expected lifecycle, and years until replacement
+- Generates a timestamped filename to avoid overwriting previous exports
+- Returns the path to the exported CSV file
+
+### 2. Main Function Update
+- Modified the `main()` function to call the new export function after generating and displaying the forecast
+- Prints a confirmation message with the path to the exported CSV file
+
+### 3. Benefits of CSV Export
+
+1. **Data Portability**: The forecast data can be easily imported into spreadsheet software or other analysis tools.
+
+2. **Comprehensive Documentation**: The CSV includes all the key metrics needed for further analysis or reporting.
+
+3. **Sharing and Collaboration**: The CSV file can be easily shared with stakeholders who may not have access to the application.
+
+4. **Historical Record**: The timestamped filenames allow for tracking changes in forecasts over time. 
