@@ -682,6 +682,7 @@ def generate_unconstrained_forecast(fleet_scores: List[Dict],
         List[Dict]: Forecast for replacement years
     """
     forecast = []
+    beyond_ten_years = []  # Store fleets with replacement years beyond 10 years
     
     # Sort fleet_scores by TotalScore in descending order (highest priority first)
     sorted_fleet_scores = sorted(fleet_scores, key=lambda x: x['TotalScore'], reverse=True)
@@ -744,21 +745,34 @@ def generate_unconstrained_forecast(fleet_scores: List[Dict],
             # Device is newer, recommend replacement at expected end-of-life
             replacement_year = current_year + int((1 - age_factor) * expected_lifecycle)
         
-        # Limit replacement year to 10 years from now
-        max_replacement_year = current_year + 10
-        replacement_year = min(replacement_year, max_replacement_year)
+        # Store the original replacement year before capping
+        original_replacement_year = replacement_year
         
-        fleet_replacements.append({
+        # Limit replacement year to 10 years from now for display purposes
+        max_replacement_year = current_year + 10
+        capped_replacement_year = min(replacement_year, max_replacement_year)
+        
+        # Create fleet replacement entry
+        fleet_entry = {
             'DeviceType': device_type,
             'FleetSize': fleet['FleetSize'],
             'DeviceIDs': fleet['DeviceIDs'],
-            'ReplacementYear': replacement_year,
+            'ReplacementYear': capped_replacement_year,
+            'OriginalReplacementYear': original_replacement_year,
             'FleetReplacementCost': fleet['FleetReplacementCost'],
             'Score': fleet['TotalScore'],
             'AvgAge': avg_fleet_age,
             'ExpectedLifecycle': expected_lifecycle,
-            'YearsUntilReplacement': replacement_year - current_year
-        })
+            'YearsUntilReplacement': capped_replacement_year - current_year,
+            'OriginalYearsUntilReplacement': original_replacement_year - current_year,
+            'IsBeyondTenYears': original_replacement_year > max_replacement_year
+        }
+        
+        fleet_replacements.append(fleet_entry)
+        
+        # If replacement is beyond 10 years, add to the beyond_ten_years list
+        if original_replacement_year > max_replacement_year:
+            beyond_ten_years.append(fleet_entry)
     
     # Group replacements by year
     # Find the maximum year in the forecast (limited to 10 years)
@@ -781,12 +795,34 @@ def generate_unconstrained_forecast(fleet_scores: List[Dict],
                     'Score': f['Score'],
                     'AvgAge': f['AvgAge'],
                     'ExpectedLifecycle': f['ExpectedLifecycle'],
-                    'YearsUntilReplacement': f['YearsUntilReplacement']
+                    'YearsUntilReplacement': f['YearsUntilReplacement'],
+                    'OriginalYearsUntilReplacement': f['OriginalYearsUntilReplacement'],
+                    'IsBeyondTenYears': f['IsBeyondTenYears']
                 } for f in year_replacements],
                 'FleetCosts': fleet_costs,
                 'TotalCost': total_cost,
                 'IsUnconstrained': True
             })
+    
+    # Add a special entry for fleets beyond 10 years
+    if beyond_ten_years:
+        forecast.append({
+            'Year': 'Beyond 10 Years',
+            'FleetsToReplace': [{
+                'DeviceType': f['DeviceType'],
+                'FleetSize': f['FleetSize'],
+                'DeviceIDs': f['DeviceIDs'],
+                'Score': f['Score'],
+                'AvgAge': f['AvgAge'],
+                'ExpectedLifecycle': f['ExpectedLifecycle'],
+                'YearsUntilReplacement': f['OriginalYearsUntilReplacement'],
+                'IsBeyondTenYears': True
+            } for f in beyond_ten_years],
+            'FleetCosts': {f['DeviceType']: f['FleetReplacementCost'] for f in beyond_ten_years},
+            'TotalCost': sum(f['FleetReplacementCost'] for f in beyond_ten_years),
+            'IsUnconstrained': True,
+            'IsBeyondTenYears': True
+        })
     
     return forecast
 
@@ -804,6 +840,27 @@ def output_fleet_forecast(forecast: List[Dict], annual_budget: Optional[float] =
         print(f"\nBudget-Constrained Fleet Replacement Forecast (Annual Budget: ${annual_budget:,.2f}):")
     
     for entry in forecast:
+        # Check if this is the "Beyond 10 Years" entry
+        if entry.get('IsBeyondTenYears', False) and entry['Year'] == 'Beyond 10 Years':
+            print("\nFleets Scheduled for Replacement Beyond 10 Years:")
+            print("(These fleets are performing well and have longer expected lifecycles)")
+            
+            for fleet in entry['FleetsToReplace']:
+                device_type = fleet['DeviceType']
+                fleet_size = fleet['FleetSize']
+                years_until_replacement = fleet['YearsUntilReplacement']
+                score = fleet['Score']
+                avg_age = fleet['AvgAge']
+                expected_lifecycle = fleet['ExpectedLifecycle']
+                
+                print(f"- {device_type}: {fleet_size} devices")
+                print(f"  Replacement in {years_until_replacement} years (Year {datetime.now().year + years_until_replacement})")
+                print(f"  Score: {score}, Avg Age: {avg_age:.1f} years")
+                print(f"  Expected Lifecycle: {expected_lifecycle} years")
+            
+            print(f"Total Cost for Fleets Beyond 10 Years: ${entry['TotalCost']:,.2f}")
+            continue
+        
         print(f"\nYear {entry['Year']}:")
         print("Fleets to Replace:")
         if 'FleetCosts' in entry:
@@ -818,6 +875,10 @@ def output_fleet_forecast(forecast: List[Dict], annual_budget: Optional[float] =
                         print(f"  Score: {fleet_info.get('Score', 'N/A')}, Avg Age: {fleet_info.get('AvgAge', 'N/A'):.1f} years")
                         print(f"  Expected Lifecycle: {fleet_info.get('ExpectedLifecycle', 'N/A')} years")
                         print(f"  Years Until Replacement: {fleet_info.get('YearsUntilReplacement', 'N/A')}")
+                        
+                        # If this fleet is actually scheduled beyond 10 years but capped for display
+                        if fleet_info.get('IsBeyondTenYears', False):
+                            print(f"  Note: This fleet is actually scheduled for replacement in {fleet_info.get('OriginalYearsUntilReplacement', 'N/A')} years")
         
         print(f"Total Cost: ${entry['TotalCost']:,.2f}")
         if 'RemainingBudget' in entry:
@@ -844,6 +905,33 @@ def export_forecast_to_csv(forecast: List[Dict], annual_budget: Optional[float] 
     
     # Flatten the forecast data for CSV format
     for entry in forecast:
+        # Skip the "Beyond 10 Years" entry as we'll handle it separately
+        if entry.get('IsBeyondTenYears', False) and entry['Year'] == 'Beyond 10 Years':
+            for fleet in entry['FleetsToReplace']:
+                device_type = fleet['DeviceType']
+                fleet_size = fleet['FleetSize']
+                replacement_cost = entry['FleetCosts'].get(device_type, 0)
+                
+                # Create a row for the CSV
+                row = {
+                    'Year': 'Beyond 10 Years',
+                    'DeviceType': device_type,
+                    'FleetSize': fleet_size,
+                    'ReplacementType': 'Complete',
+                    'ReplacementCost': replacement_cost,
+                    'TotalYearCost': entry['TotalCost'],
+                    'RemainingBudget': None,
+                    'ForecastType': forecast_type,
+                    'Score': fleet.get('Score', 'N/A'),
+                    'AvgAge': fleet.get('AvgAge', 'N/A'),
+                    'ExpectedLifecycle': fleet.get('ExpectedLifecycle', 'N/A'),
+                    'YearsUntilReplacement': fleet.get('YearsUntilReplacement', 'N/A'),
+                    'IsBeyondTenYears': True
+                }
+                
+                csv_data.append(row)
+            continue
+        
         year = entry['Year']
         total_cost = entry['TotalCost']
         remaining_budget = entry.get('RemainingBudget', None)
@@ -866,7 +954,8 @@ def export_forecast_to_csv(forecast: List[Dict], annual_budget: Optional[float] 
                 'ReplacementCost': replacement_cost,
                 'TotalYearCost': total_cost,
                 'RemainingBudget': remaining_budget,
-                'ForecastType': forecast_type
+                'ForecastType': forecast_type,
+                'IsBeyondTenYears': fleet.get('IsBeyondTenYears', False)
             }
             
             # Add unconstrained forecast specific fields
@@ -875,7 +964,8 @@ def export_forecast_to_csv(forecast: List[Dict], annual_budget: Optional[float] 
                     'Score': fleet.get('Score', 'N/A'),
                     'AvgAge': fleet.get('AvgAge', 'N/A'),
                     'ExpectedLifecycle': fleet.get('ExpectedLifecycle', 'N/A'),
-                    'YearsUntilReplacement': fleet.get('YearsUntilReplacement', 'N/A')
+                    'YearsUntilReplacement': fleet.get('YearsUntilReplacement', 'N/A'),
+                    'OriginalYearsUntilReplacement': fleet.get('OriginalYearsUntilReplacement', 'N/A')
                 })
             
             csv_data.append(row)
