@@ -64,17 +64,39 @@ Modified the `main()` function to:
 ### 2. New Function: `generate_unconstrained_forecast`
 - Creates replacement recommendations based on device scores and age when no budget is provided
 - Calculates optimal replacement timing for each fleet using:
-  - Device score (70% weight)
-  - Device age relative to expected lifecycle (30% weight)
-- Spreads replacements across the 5-year forecast period
-- Ensures all devices are eventually replaced
+  - Device age relative to expected lifecycle (primary factor)
+  - Device score (secondary factor that can override age-based recommendations)
+- For devices past their expected lifecycle:
+  - If score is low (good performance), extends replacement timeline by 3-5 years
+  - If score is moderate, extends replacement timeline by 1-2 years
+  - If score is high (poor performance), recommends immediate replacement
+- For devices approaching end-of-life:
+  - If score is low, extends replacement timeline
+  - If score is high, recommends replacement at expected end-of-life
+- For newer devices, recommends replacement based on expected lifecycle
+- Creates a forecast that spans multiple years (not limited to 5 years)
 
 ### 3. Enhanced Output
 - Updated output to clearly indicate whether recommendations are budget-constrained or unconstrained
-- For unconstrained forecasts, shows when each fleet should be replaced based on scores and age
-- For budget-constrained forecasts, shows how the budget is allocated across fleets
+- For unconstrained forecasts, shows:
+  - When each fleet should be replaced based on expected lifecycle and score
+  - The expected lifecycle of each device type
+  - The current age of each fleet
+  - The device score and how it affects the replacement timeline
+  - The years until replacement for each fleet
+- For budget-constrained forecasts, shows how the budget is allocated across fleets within the 5-year window
 
 ### 4. Command-Line Interface
 - Added argument parsing to allow users to specify an optional budget
 - Example usage: `python main.py --budget 200000` for budget-constrained forecast
-- Example usage: `python main.py` for unconstrained forecast based on scores and age 
+- Example usage: `python main.py` for unconstrained forecast based on scores and age
+
+### 5. Benefits of the Revised Approach
+
+1. **Balanced Decision Making**: The unconstrained forecast considers both device age and performance, not just blindly replacing old devices.
+
+2. **Performance-Based Extensions**: Devices that are past their expected lifecycle but performing well have their replacement timeline extended.
+
+3. **Long-Term Strategic Planning**: Facilities receive a comprehensive long-term replacement plan that aligns with both device lifecycles and performance.
+
+4. **Cost Optimization**: By extending the life of well-performing devices, even if they're older, the system helps optimize long-term costs. 

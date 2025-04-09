@@ -679,7 +679,7 @@ def generate_unconstrained_forecast(fleet_scores: List[Dict],
         replacement_costs: Dictionary of replacement costs
     
     Returns:
-        List[Dict]: Forecast for the next 5 years
+        List[Dict]: Forecast for replacement years
     """
     forecast = []
     
@@ -696,10 +696,6 @@ def generate_unconstrained_forecast(fleet_scores: List[Dict],
         # Sort devices by age (oldest first)
         fleet_devices = fleet_devices.sort_values(by=PURCHASE_DATE_COLUMN)
         
-        # Calculate replacement year based on score and age
-        # Higher scores and older devices get earlier replacement years
-        score_factor = fleet['TotalScore'] / 100.0  # Normalize score to 0-1 range
-        
         # Calculate average age of the fleet
         fleet_ages = [calculate_device_age(row[PURCHASE_DATE_COLUMN]) for _, row in fleet_devices.iterrows()]
         avg_fleet_age = sum(fleet_ages) / len(fleet_ages) if fleet_ages else 0
@@ -711,12 +707,42 @@ def generate_unconstrained_forecast(fleet_scores: List[Dict],
         # Calculate age factor (0-1 range, higher for older fleets)
         age_factor = min(avg_fleet_age / expected_lifecycle, 1.0)
         
-        # Combined factor (weighted average of score and age)
-        combined_factor = (score_factor * 0.7) + (age_factor * 0.3)
+        # Normalize score to 0-1 range (lower score is better)
+        score_factor = 1 - (fleet['TotalScore'] / 100.0)
         
-        # Determine replacement year (1-5)
-        # Lower combined_factor means earlier replacement
-        replacement_year = max(1, min(5, int(combined_factor * 5) + 1))
+        # Determine replacement year based on age and score
+        current_year = datetime.now().year
+        
+        # If device is past expected lifecycle
+        if age_factor >= 1.0:
+            # If score is low (good performance), extend replacement timeline
+            if score_factor > 0.7:  # Score < 30
+                # Extend replacement by 3-5 years based on score
+                extension_years = int(3 + (score_factor - 0.7) * 10)  # 3-5 years extension
+                replacement_year = current_year + extension_years
+            elif score_factor > 0.5:  # Score < 50
+                # Extend replacement by 1-2 years based on score
+                extension_years = int(1 + (score_factor - 0.5) * 5)  # 1-2 years extension
+                replacement_year = current_year + extension_years
+            else:
+                # High score (poor performance), recommend replacement soon
+                replacement_year = current_year + 1
+        # If device is approaching end-of-life (within 1-2 years)
+        elif age_factor > 0.8:
+            # If score is low (good performance), extend replacement timeline
+            if score_factor > 0.7:  # Score < 30
+                # Extend replacement by 2-3 years based on score
+                extension_years = int(2 + (score_factor - 0.7) * 5)  # 2-3 years extension
+                replacement_year = current_year + int((1 - age_factor) * expected_lifecycle) + extension_years
+            elif score_factor > 0.5:  # Score < 50
+                # Extend replacement by 1 year based on score
+                replacement_year = current_year + int((1 - age_factor) * expected_lifecycle) + 1
+            else:
+                # High score (poor performance), recommend replacement at expected end-of-life
+                replacement_year = current_year + int((1 - age_factor) * expected_lifecycle)
+        else:
+            # Device is newer, recommend replacement at expected end-of-life
+            replacement_year = current_year + int((1 - age_factor) * expected_lifecycle)
         
         fleet_replacements.append({
             'DeviceType': device_type,
@@ -726,11 +752,16 @@ def generate_unconstrained_forecast(fleet_scores: List[Dict],
             'FleetReplacementCost': fleet['FleetReplacementCost'],
             'Score': fleet['TotalScore'],
             'AvgAge': avg_fleet_age,
-            'ExpectedLifecycle': expected_lifecycle
+            'ExpectedLifecycle': expected_lifecycle,
+            'YearsUntilReplacement': replacement_year - current_year
         })
     
     # Group replacements by year
-    for year in range(1, 6):
+    # Find the maximum year in the forecast
+    max_year = max(f['ReplacementYear'] for f in fleet_replacements)
+    
+    # Create forecast entries for each year from current year to max year
+    for year in range(current_year, max_year + 1):
         year_replacements = [f for f in fleet_replacements if f['ReplacementYear'] == year]
         
         if year_replacements:
@@ -738,11 +769,15 @@ def generate_unconstrained_forecast(fleet_scores: List[Dict],
             total_cost = sum(fleet_costs.values())
             
             forecast.append({
-                'Year': datetime.now().year + year,
+                'Year': year,
                 'FleetsToReplace': [{
                     'DeviceType': f['DeviceType'],
                     'FleetSize': f['FleetSize'],
-                    'DeviceIDs': f['DeviceIDs']
+                    'DeviceIDs': f['DeviceIDs'],
+                    'Score': f['Score'],
+                    'AvgAge': f['AvgAge'],
+                    'ExpectedLifecycle': f['ExpectedLifecycle'],
+                    'YearsUntilReplacement': f['YearsUntilReplacement']
                 } for f in year_replacements],
                 'FleetCosts': fleet_costs,
                 'TotalCost': total_cost,
@@ -773,6 +808,13 @@ def output_fleet_forecast(forecast: List[Dict], annual_budget: Optional[float] =
                 if fleet_info:
                     replacement_type = "Partial" if fleet_info.get('IsPartialReplacement', False) else "Complete"
                     print(f"- {device_type}: {replacement_type} replacement of {fleet_info['FleetSize']} devices: ${cost:,.2f}")
+                    
+                    # For unconstrained forecast, show additional details
+                    if entry.get('IsUnconstrained', False):
+                        print(f"  Score: {fleet_info.get('Score', 'N/A')}, Avg Age: {fleet_info.get('AvgAge', 'N/A'):.1f} years")
+                        print(f"  Expected Lifecycle: {fleet_info.get('ExpectedLifecycle', 'N/A')} years")
+                        print(f"  Years Until Replacement: {fleet_info.get('YearsUntilReplacement', 'N/A')}")
+        
         print(f"Total Cost: ${entry['TotalCost']:,.2f}")
         if 'RemainingBudget' in entry:
             print(f"Remaining Budget: ${entry['RemainingBudget']:,.2f}")
