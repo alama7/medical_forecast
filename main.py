@@ -582,18 +582,37 @@ def calculate_fleet_scores(devices: pd.DataFrame,
 
 def generate_fleet_forecast(fleet_scores: List[Dict], 
                           devices: pd.DataFrame,
-                          replacement_costs: Dict[str, float]) -> List[Dict]:
-    """Generate replacement forecast for the next 5 years at the fleet level."""
+                          replacement_costs: Dict[str, float],
+                          annual_budget: Optional[float] = None) -> List[Dict]:
+    """
+    Generate replacement forecast for the next 5 years at the fleet level.
+    
+    Args:
+        fleet_scores: List of fleet scores
+        devices: DataFrame containing device information
+        replacement_costs: Dictionary of replacement costs
+        annual_budget: Optional annual budget. If None, forecast based on scores and age only.
+    
+    Returns:
+        List[Dict]: Forecast for the next 5 years
+    """
     forecast = []
     
     # Sort fleet_scores by TotalScore in descending order (highest priority first)
     sorted_fleet_scores = sorted(fleet_scores, key=lambda x: x['TotalScore'], reverse=True)
     remaining_fleets = sorted_fleet_scores.copy()
     
+    # If no budget provided, calculate replacement years based on scores and age
+    if annual_budget is None:
+        logger.info("No budget provided. Generating forecast based on scores and age.")
+        return generate_unconstrained_forecast(fleet_scores, devices, replacement_costs)
+    
+    # Budget-constrained forecast
+    logger.info(f"Generating budget-constrained forecast with annual budget of ${annual_budget:,.2f}")
     for year in range(1, 6):
         yearly_replacements = []
         fleet_costs = {}  # Dictionary to track fleet costs
-        remaining_budget = CONFIG['ANNUAL_BUDGET']
+        remaining_budget = annual_budget
         
         for fleet in remaining_fleets[:]:  # Use slice to avoid modification during iteration
             try:
@@ -648,9 +667,103 @@ def generate_fleet_forecast(fleet_scores: List[Dict],
     
     return forecast
 
-def output_fleet_forecast(forecast: List[Dict]):
-    """Output the fleet forecast results."""
-    print("\nFleet Replacement Forecast for Next 5 Years:")
+def generate_unconstrained_forecast(fleet_scores: List[Dict], 
+                                  devices: pd.DataFrame,
+                                  replacement_costs: Dict[str, float]) -> List[Dict]:
+    """
+    Generate replacement forecast based on scores and age without budget constraints.
+    
+    Args:
+        fleet_scores: List of fleet scores
+        devices: DataFrame containing device information
+        replacement_costs: Dictionary of replacement costs
+    
+    Returns:
+        List[Dict]: Forecast for the next 5 years
+    """
+    forecast = []
+    
+    # Sort fleet_scores by TotalScore in descending order (highest priority first)
+    sorted_fleet_scores = sorted(fleet_scores, key=lambda x: x['TotalScore'], reverse=True)
+    
+    # Calculate replacement years for each fleet based on score and age
+    fleet_replacements = []
+    
+    for fleet in sorted_fleet_scores:
+        device_type = fleet['DeviceType']
+        fleet_devices = devices[devices['DeviceType'] == device_type]
+        
+        # Sort devices by age (oldest first)
+        fleet_devices = fleet_devices.sort_values(by=PURCHASE_DATE_COLUMN)
+        
+        # Calculate replacement year based on score and age
+        # Higher scores and older devices get earlier replacement years
+        score_factor = fleet['TotalScore'] / 100.0  # Normalize score to 0-1 range
+        
+        # Calculate average age of the fleet
+        fleet_ages = [calculate_device_age(row[PURCHASE_DATE_COLUMN]) for _, row in fleet_devices.iterrows()]
+        avg_fleet_age = sum(fleet_ages) / len(fleet_ages) if fleet_ages else 0
+        
+        # Get expected lifecycle for this device type
+        lifecycle_cache = load_or_create_lifecycle_cache()
+        expected_lifecycle = get_expected_lifecycle(device_type, lifecycle_cache)
+        
+        # Calculate age factor (0-1 range, higher for older fleets)
+        age_factor = min(avg_fleet_age / expected_lifecycle, 1.0)
+        
+        # Combined factor (weighted average of score and age)
+        combined_factor = (score_factor * 0.7) + (age_factor * 0.3)
+        
+        # Determine replacement year (1-5)
+        # Lower combined_factor means earlier replacement
+        replacement_year = max(1, min(5, int(combined_factor * 5) + 1))
+        
+        fleet_replacements.append({
+            'DeviceType': device_type,
+            'FleetSize': fleet['FleetSize'],
+            'DeviceIDs': fleet['DeviceIDs'],
+            'ReplacementYear': replacement_year,
+            'FleetReplacementCost': fleet['FleetReplacementCost'],
+            'Score': fleet['TotalScore'],
+            'AvgAge': avg_fleet_age,
+            'ExpectedLifecycle': expected_lifecycle
+        })
+    
+    # Group replacements by year
+    for year in range(1, 6):
+        year_replacements = [f for f in fleet_replacements if f['ReplacementYear'] == year]
+        
+        if year_replacements:
+            fleet_costs = {f['DeviceType']: f['FleetReplacementCost'] for f in year_replacements}
+            total_cost = sum(fleet_costs.values())
+            
+            forecast.append({
+                'Year': datetime.now().year + year,
+                'FleetsToReplace': [{
+                    'DeviceType': f['DeviceType'],
+                    'FleetSize': f['FleetSize'],
+                    'DeviceIDs': f['DeviceIDs']
+                } for f in year_replacements],
+                'FleetCosts': fleet_costs,
+                'TotalCost': total_cost,
+                'IsUnconstrained': True
+            })
+    
+    return forecast
+
+def output_fleet_forecast(forecast: List[Dict], annual_budget: Optional[float] = None):
+    """
+    Output the fleet forecast results.
+    
+    Args:
+        forecast: List of forecast entries
+        annual_budget: Optional annual budget
+    """
+    if annual_budget is None:
+        print("\nUnconstrained Fleet Replacement Forecast (Based on Scores and Age):")
+    else:
+        print(f"\nBudget-Constrained Fleet Replacement Forecast (Annual Budget: ${annual_budget:,.2f}):")
+    
     for entry in forecast:
         print(f"\nYear {entry['Year']}:")
         print("Fleets to Replace:")
@@ -661,10 +774,18 @@ def output_fleet_forecast(forecast: List[Dict]):
                     replacement_type = "Partial" if fleet_info.get('IsPartialReplacement', False) else "Complete"
                     print(f"- {device_type}: {replacement_type} replacement of {fleet_info['FleetSize']} devices: ${cost:,.2f}")
         print(f"Total Cost: ${entry['TotalCost']:,.2f}")
-        print(f"Remaining Budget: ${entry['RemainingBudget']:,.2f}")
+        if 'RemainingBudget' in entry:
+            print(f"Remaining Budget: ${entry['RemainingBudget']:,.2f}")
+        if entry.get('IsUnconstrained', False):
+            print("(Based on scores and age, not budget-constrained)")
 
-def main():
-    """Main function to run the equipment analysis."""
+def main(annual_budget: Optional[float] = None):
+    """
+    Main function to run the equipment analysis.
+    
+    Args:
+        annual_budget: Optional annual budget for replacements
+    """
     try:
         logger.info("Starting equipment analysis")
         
@@ -681,8 +802,8 @@ def main():
         fleet_scores = calculate_fleet_scores(devices, work_orders, replacement_costs, utilization_cache)
         
         # Generate and output fleet forecast
-        forecast = generate_fleet_forecast(fleet_scores, devices, replacement_costs)
-        output_fleet_forecast(forecast)
+        forecast = generate_fleet_forecast(fleet_scores, devices, replacement_costs, annual_budget)
+        output_fleet_forecast(forecast, annual_budget)
         
         logger.info("Equipment analysis completed successfully")
         
@@ -691,4 +812,10 @@ def main():
         raise
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Medical Equipment Replacement Forecast')
+    parser.add_argument('--budget', type=float, help='Annual budget for replacements (optional)')
+    args = parser.parse_args()
+    
+    main(args.budget)

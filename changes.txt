@@ -52,4 +52,29 @@ Modified the `main()` function to:
 
 4. **Cost Efficiency**: Replacing entire fleets can often be more cost-effective than individual replacements due to potential volume discounts and reduced administrative overhead.
 
-5. **Operational Continuity**: Fleet-level replacements allow for better planning of downtime and training. 
+5. **Operational Continuity**: Fleet-level replacements allow for better planning of downtime and training.
+
+## Additional Changes: Budget and Non-Budget Scenarios
+
+### 1. Flexible Budget Handling
+- Modified the system to handle both budget-constrained and unconstrained scenarios
+- Added command-line argument `--budget` to optionally specify an annual budget
+- When no budget is provided, the system generates recommendations based on device scores and age
+
+### 2. New Function: `generate_unconstrained_forecast`
+- Creates replacement recommendations based on device scores and age when no budget is provided
+- Calculates optimal replacement timing for each fleet using:
+  - Device score (70% weight)
+  - Device age relative to expected lifecycle (30% weight)
+- Spreads replacements across the 5-year forecast period
+- Ensures all devices are eventually replaced
+
+### 3. Enhanced Output
+- Updated output to clearly indicate whether recommendations are budget-constrained or unconstrained
+- For unconstrained forecasts, shows when each fleet should be replaced based on scores and age
+- For budget-constrained forecasts, shows how the budget is allocated across fleets
+
+### 4. Command-Line Interface
+- Added argument parsing to allow users to specify an optional budget
+- Example usage: `python main.py --budget 200000` for budget-constrained forecast
+- Example usage: `python main.py` for unconstrained forecast based on scores and age 
