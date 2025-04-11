@@ -136,19 +136,24 @@ def load_data() -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
         logger.error(f"Error loading data: {e}")
         raise
 
-def calculate_device_age(purchase_date: Union[str, pd.Timestamp]) -> float:
-    """Calculate device age in years."""
+def calculate_device_age(purchase_date: str) -> float:
+    """
+    Calculate the age of a device in years.
+    
+    Args:
+        purchase_date: Purchase date in YYYY-MM-DD format
+    
+    Returns:
+        float: Age in years
+    """
     try:
-        purchase_date = pd.to_datetime(purchase_date)
-    except Exception as e:
-        logger.error(f"Invalid purchase date format: {e}")
-        return 0
-
-    if pd.isna(purchase_date):
-        logger.warning("Purchase date is missing")
-        return 0
-
-    return (datetime.now() - purchase_date).days / 365.25
+        purchase_date = datetime.strptime(purchase_date, "%Y-%m-%d")
+        today = datetime.now()
+        age = (today - purchase_date).days / 365.25
+        return age
+    except (ValueError, TypeError):
+        logger.warning(f"Invalid purchase date format: {purchase_date}")
+        return 0.0
 
 def calculate_annual_maintenance_cost(device_id: str, 
                                    year: int, 
@@ -325,6 +330,107 @@ def calculate_total_score(age_score: float, maintenance_cost_score: float,
     except ZeroDivisionError:
         logger.warning("Division by zero encountered in score calculation")
         return 0.0
+
+def preprocess_work_orders(work_orders: pd.DataFrame, batch_size: int = 10) -> pd.DataFrame:
+    """
+    Preprocess work orders data to ensure it has the MaintenanceType column.
+    Uses ChatGPT to categorize work orders based on their description and type.
+    Processes work orders in batches for efficiency.
+    
+    Args:
+        work_orders: DataFrame containing work order records
+        batch_size: Number of work orders to process in a single API call
+        
+    Returns:
+        pd.DataFrame: Preprocessed work orders DataFrame
+    """
+    # Make a copy to avoid modifying the original DataFrame
+    work_orders = work_orders.copy()
+    
+    # Ensure Date column is datetime type
+    if 'Date' in work_orders.columns and not pd.api.types.is_datetime64_dtype(work_orders['Date']):
+        logger.info("Converting Date column to datetime type")
+        work_orders['Date'] = pd.to_datetime(work_orders['Date'], errors='coerce')
+    
+    # Check if we need to categorize work orders
+    if 'MaintenanceType' not in work_orders.columns or work_orders['MaintenanceType'].isna().any():
+        logger.info("Categorizing work orders using ChatGPT")
+        
+        # Create a temporary column for work order type if it exists
+        work_order_type_col = None
+        for possible_col in ['WorkOrderType', 'Type', 'Category', 'MaintenanceCategory']:
+            if possible_col in work_orders.columns:
+                work_order_type_col = possible_col
+                break
+        
+        # Prepare data for batch processing
+        work_orders_to_categorize = []
+        indices_to_categorize = []
+        
+        # Identify which rows need categorization
+        for idx, row in work_orders.iterrows():
+            if 'MaintenanceType' not in work_orders.columns or pd.isna(row.get('MaintenanceType')):
+                order_data = {}
+                
+                # Add description if available
+                if 'Description' in work_orders.columns:
+                    order_data['description'] = row['Description']
+                
+                # Add work order type if available
+                if work_order_type_col:
+                    order_data['work_order_type'] = row[work_order_type_col]
+                
+                # Only add if we have some data to categorize
+                if order_data:
+                    work_orders_to_categorize.append(order_data)
+                    indices_to_categorize.append(idx)
+        
+        # If we have work orders to categorize
+        if work_orders_to_categorize:
+            logger.info(f"Batch processing {len(work_orders_to_categorize)} work orders")
+            
+            # Use batch categorization
+            categories = batch_categorize_maintenance_types(work_orders_to_categorize, batch_size)
+            
+            # Create MaintenanceType column if it doesn't exist
+            if 'MaintenanceType' not in work_orders.columns:
+                work_orders['MaintenanceType'] = None
+            
+            # Update the DataFrame with the categorized values
+            for i, idx in enumerate(indices_to_categorize):
+                if i < len(categories):
+                    work_orders.at[idx, 'MaintenanceType'] = categories[i]
+                else:
+                    # Default to Repair if we somehow didn't get a category
+                    work_orders.at[idx, 'MaintenanceType'] = 'Repair'
+        else:
+            # No data to categorize, default to Repair
+            logger.warning("No data available for categorization. Using default categorization.")
+            work_orders['MaintenanceType'] = 'Repair'
+    else:
+        # MaintenanceType column already exists and has no NaN values
+        # Still standardize it using our categorization function
+        logger.info("Standardizing existing MaintenanceType column")
+        
+        # Prepare data for batch processing
+        work_orders_to_standardize = []
+        indices_to_standardize = []
+        
+        for idx, row in work_orders.iterrows():
+            work_orders_to_standardize.append({
+                'description': row['MaintenanceType']
+            })
+            indices_to_standardize.append(idx)
+        
+        # Use batch categorization for standardization
+        standardized_categories = batch_categorize_maintenance_types(work_orders_to_standardize, batch_size)
+        
+        # Update the DataFrame with the standardized values
+        for i, idx in enumerate(indices_to_standardize):
+            if i < len(standardized_categories):
+                work_orders.at[idx, 'MaintenanceType'] = standardized_categories[i]
+    
+    return work_orders
 
 def calculate_fleet_scores(devices: pd.DataFrame, 
                          work_orders: pd.DataFrame,
