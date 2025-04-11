@@ -326,172 +326,12 @@ def calculate_total_score(age_score: float, maintenance_cost_score: float,
         logger.warning("Division by zero encountered in score calculation")
         return 0.0
 
-def generate_forecast(device_scores: List[Dict], 
-                     devices: pd.DataFrame,
-                     replacement_costs: Dict[str, float]) -> List[Dict]:
-    """Generate replacement forecast for the next 5 years."""
-    forecast = []
-    
-    # Sort device_scores by TotalScore in descending order (highest priority first)
-    sorted_device_scores = sorted(device_scores, key=lambda x: x['TotalScore'], reverse=True)
-    remaining_devices = sorted_device_scores.copy()
-    
-    for year in range(1, 6):
-        yearly_replacements = []
-        device_costs = {}  # New dictionary to track individual costs
-        remaining_budget = CONFIG['ANNUAL_BUDGET']
-        
-        for device in remaining_devices[:]:  # Use slice to avoid modification during iteration
-            try:
-                device_type = devices[devices['DeviceID'] == device['DeviceID']]['DeviceType'].iloc[0]
-                replacement_cost = replacement_costs.get(device_type, CONFIG['DEFAULT_REPLACEMENT_COST'])
-                
-                if remaining_budget >= replacement_cost:
-                    yearly_replacements.append(device['DeviceID'])
-                    device_costs[device['DeviceID']] = replacement_cost  # Store individual cost
-                    remaining_budget -= replacement_cost
-                    remaining_devices.remove(device)
-            except IndexError:
-                logger.warning(f"Device ID {device['DeviceID']} not found in devices DataFrame")
-                continue
-        
-        total_cost = sum(device_costs.values())
-        
-        forecast.append({
-            'Year': datetime.now().year + year,
-            'DevicesToReplace': yearly_replacements,
-            'DeviceCosts': device_costs,  # Add device costs to forecast
-            'TotalCost': total_cost,
-            'RemainingBudget': remaining_budget
-        })
-    
-    return forecast
-
-def output_forecast(forecast: List[Dict]):
-    """Output the forecast results."""
-    print("\nReplacement Forecast for Next 5 Years:")
-    for entry in forecast:
-        print(f"\nYear {entry['Year']}:")
-        print("Devices to Replace:")
-        if 'DeviceCosts' in entry:  # Add individual costs to the output
-            for device_id, cost in entry['DeviceCosts'].items():
-                print(f"- {device_id}: ${cost:,.2f}")
-        print(f"Total Cost: ${entry['TotalCost']:,.2f}")
-        print(f"Remaining Budget: ${entry['RemainingBudget']:,.2f}")
-
-def save_utilization_cache(cache: Dict[str, float]):
-    """Save utilization cache to file."""
-    cache_df = pd.DataFrame(list(cache.items()), 
-                          columns=['DeviceType', 'UtilizationRate'])
-    cache_df.to_csv(CONFIG['UTILIZATION_CACHE_FILE'], index=False)
-
-def preprocess_work_orders(work_orders: pd.DataFrame, batch_size: int = 10) -> pd.DataFrame:
-    """
-    Preprocess work orders data to ensure it has the MaintenanceType column.
-    Uses ChatGPT to categorize work orders based on their description and type.
-    Processes work orders in batches for efficiency.
-    
-    Args:
-        work_orders: DataFrame containing work order records
-        batch_size: Number of work orders to process in a single API call
-        
-    Returns:
-        pd.DataFrame: Preprocessed work orders DataFrame
-    """
-    # Make a copy to avoid modifying the original DataFrame
-    work_orders = work_orders.copy()
-    
-    # Ensure Date column is datetime type
-    if 'Date' in work_orders.columns and not pd.api.types.is_datetime64_dtype(work_orders['Date']):
-        logger.info("Converting Date column to datetime type")
-        work_orders['Date'] = pd.to_datetime(work_orders['Date'], errors='coerce')
-    
-    # Check if we need to categorize work orders
-    if 'MaintenanceType' not in work_orders.columns or work_orders['MaintenanceType'].isna().any():
-        logger.info("Categorizing work orders using ChatGPT")
-        
-        # Create a temporary column for work order type if it exists
-        work_order_type_col = None
-        for possible_col in ['WorkOrderType', 'Type', 'Category', 'MaintenanceCategory']:
-            if possible_col in work_orders.columns:
-                work_order_type_col = possible_col
-                break
-        
-        # Prepare data for batch processing
-        work_orders_to_categorize = []
-        indices_to_categorize = []
-        
-        # Identify which rows need categorization
-        for idx, row in work_orders.iterrows():
-            if 'MaintenanceType' not in work_orders.columns or pd.isna(row.get('MaintenanceType')):
-                order_data = {}
-                
-                # Add description if available
-                if 'Description' in work_orders.columns:
-                    order_data['description'] = row['Description']
-                
-                # Add work order type if available
-                if work_order_type_col:
-                    order_data['work_order_type'] = row[work_order_type_col]
-                
-                # Only add if we have some data to categorize
-                if order_data:
-                    work_orders_to_categorize.append(order_data)
-                    indices_to_categorize.append(idx)
-        
-        # If we have work orders to categorize
-        if work_orders_to_categorize:
-            logger.info(f"Batch processing {len(work_orders_to_categorize)} work orders")
-            
-            # Use batch categorization
-            categories = batch_categorize_maintenance_types(work_orders_to_categorize, batch_size)
-            
-            # Create MaintenanceType column if it doesn't exist
-            if 'MaintenanceType' not in work_orders.columns:
-                work_orders['MaintenanceType'] = None
-            
-            # Update the DataFrame with the categorized values
-            for i, idx in enumerate(indices_to_categorize):
-                if i < len(categories):
-                    work_orders.at[idx, 'MaintenanceType'] = categories[i]
-                else:
-                    # Default to Repair if we somehow didn't get a category
-                    work_orders.at[idx, 'MaintenanceType'] = 'Repair'
-        else:
-            # No data to categorize, default to Repair
-            logger.warning("No data available for categorization. Using default categorization.")
-            work_orders['MaintenanceType'] = 'Repair'
-    else:
-        # MaintenanceType column already exists and has no NaN values
-        # Still standardize it using our categorization function
-        logger.info("Standardizing existing MaintenanceType column")
-        
-        # Prepare data for batch processing
-        work_orders_to_standardize = []
-        indices_to_standardize = []
-        
-        for idx, row in work_orders.iterrows():
-            work_orders_to_standardize.append({
-                'description': row['MaintenanceType']
-            })
-            indices_to_standardize.append(idx)
-        
-        # Use batch categorization for standardization
-        standardized_categories = batch_categorize_maintenance_types(work_orders_to_standardize, batch_size)
-        
-        # Update the DataFrame with the standardized values
-        for i, idx in enumerate(indices_to_standardize):
-            if i < len(standardized_categories):
-                work_orders.at[idx, 'MaintenanceType'] = standardized_categories[i]
-    
-    return work_orders
-
 def calculate_fleet_scores(devices: pd.DataFrame, 
-                          work_orders: pd.DataFrame, 
-                          replacement_costs: Dict[str, float],
-                          utilization_cache: Dict[str, float]) -> List[Dict]:
+                         work_orders: pd.DataFrame,
+                         replacement_costs: Dict[str, float],
+                         utilization_cache: Dict[str, float]) -> List[Dict]:
     """
-    Calculate scores for each device fleet based on various factors.
+    Calculate scores for each fleet of devices.
     
     Args:
         devices: DataFrame containing device information
@@ -571,7 +411,9 @@ def calculate_fleet_scores(devices: pd.DataFrame,
                 'FleetSize': fleet_size,
                 'TotalScore': total_score,
                 'FleetReplacementCost': fleet_replacement_cost,
-                'DeviceIDs': fleet_devices['DeviceID'].tolist()
+                'DeviceIDs': fleet_devices['DeviceID'].tolist(),
+                'AvgAge': avg_fleet_age,
+                'ExpectedLifecycle': expected_lifecycle
             })
             
         except Exception as e:
@@ -579,6 +421,82 @@ def calculate_fleet_scores(devices: pd.DataFrame,
             continue
     
     return fleet_scores
+
+def identify_very_old_devices(devices: pd.DataFrame, fleet_scores: List[Dict]) -> List[Dict]:
+    """
+    Identify individual devices that are significantly older than their fleet average.
+    
+    Args:
+        devices: DataFrame containing device information
+        fleet_scores: List of fleet scores with average age information
+    
+    Returns:
+        List[Dict]: List of very old devices that should be replaced individually
+    """
+    logger.info("Identifying very old devices for individual replacement...")
+    
+    very_old_devices = []
+    
+    # Create a dictionary of fleet information for easy lookup
+    fleet_info = {fleet['DeviceType']: {
+        'avg_age': fleet['AvgAge'],
+        'expected_lifecycle': fleet['ExpectedLifecycle']
+    } for fleet in fleet_scores}
+    
+    # Define threshold for "very old" - devices that are 50% older than their fleet average
+    # and at least 80% of their expected lifecycle
+    for _, device in devices.iterrows():
+        device_type = device['DeviceType']
+        
+        # Skip if we don't have fleet information for this device type
+        if device_type not in fleet_info:
+            continue
+        
+        # Calculate device age
+        device_age = calculate_device_age(device[PURCHASE_DATE_COLUMN])
+        
+        # Get fleet information
+        fleet_avg_age = fleet_info[device_type]['avg_age']
+        expected_lifecycle = fleet_info[device_type]['expected_lifecycle']
+        
+        # Check if device is significantly older than fleet average and approaching end of lifecycle
+        age_ratio = device_age / fleet_avg_age if fleet_avg_age > 0 else 0
+        lifecycle_ratio = device_age / expected_lifecycle if expected_lifecycle > 0 else 0
+        
+        if age_ratio > 1.5 and lifecycle_ratio > 0.8:
+            # Calculate device-specific metrics
+            maintenance_cost = calculate_annual_maintenance_cost(device['DeviceID'], CONFIG['ANALYSIS_YEAR'], work_orders)
+            maintenance_history = calculate_maintenance_history_score(device['DeviceID'], work_orders)
+            risk_score = CONFIG['RISK_SCORES'][device['RiskClass']]
+            location_score = calculate_location_score(device['Location'])
+            
+            # Calculate device score (similar to fleet score but for individual device)
+            device_score = calculate_total_score(
+                (device_age / expected_lifecycle) * 100,  # Age score
+                (maintenance_cost / replacement_costs.get(device_type, CONFIG['DEFAULT_REPLACEMENT_COST'])) * 100,  # Maintenance cost score
+                risk_score,
+                maintenance_history,
+                location_score,
+                100  # Assume high utilization for critical devices
+            )
+            
+            very_old_devices.append({
+                'DeviceID': device['DeviceID'],
+                'DeviceType': device_type,
+                'Age': device_age,
+                'FleetAvgAge': fleet_avg_age,
+                'ExpectedLifecycle': expected_lifecycle,
+                'Score': device_score,
+                'ReplacementCost': replacement_costs.get(device_type, CONFIG['DEFAULT_REPLACEMENT_COST']),
+                'Location': device['Location'],
+                'RiskClass': device['RiskClass']
+            })
+    
+    # Sort very old devices by score (highest priority first)
+    very_old_devices = sorted(very_old_devices, key=lambda x: x['Score'], reverse=True)
+    
+    logger.info(f"Identified {len(very_old_devices)} very old devices for individual replacement")
+    return very_old_devices
 
 def generate_fleet_forecast(fleet_scores: List[Dict], 
                           devices: pd.DataFrame,
@@ -598,6 +516,9 @@ def generate_fleet_forecast(fleet_scores: List[Dict],
     """
     forecast = []
     
+    # Identify very old devices for individual replacement
+    very_old_devices = identify_very_old_devices(devices, fleet_scores)
+    
     # Sort fleet_scores by TotalScore in descending order (highest priority first)
     sorted_fleet_scores = sorted(fleet_scores, key=lambda x: x['TotalScore'], reverse=True)
     remaining_fleets = sorted_fleet_scores.copy()
@@ -605,7 +526,7 @@ def generate_fleet_forecast(fleet_scores: List[Dict],
     # If no budget provided, calculate replacement years based on scores and age
     if annual_budget is None:
         logger.info("No budget provided. Generating forecast based on scores and age.")
-        return generate_unconstrained_forecast(fleet_scores, devices, replacement_costs)
+        return generate_unconstrained_forecast(fleet_scores, devices, replacement_costs, very_old_devices)
     
     # Budget-constrained forecast
     logger.info(f"Generating budget-constrained forecast with annual budget of ${annual_budget:,.2f}")
@@ -614,6 +535,26 @@ def generate_fleet_forecast(fleet_scores: List[Dict],
         fleet_costs = {}  # Dictionary to track fleet costs
         remaining_budget = annual_budget
         
+        # First, handle very old devices that need immediate replacement
+        very_old_replacements = []
+        for device in very_old_devices[:]:  # Use slice to avoid modification during iteration
+            if device['Score'] > CONFIG['HIGH_PRIORITY_THRESHOLD'] and remaining_budget >= device['ReplacementCost']:
+                very_old_replacements.append({
+                    'DeviceID': device['DeviceID'],
+                    'DeviceType': device['DeviceType'],
+                    'Age': device['Age'],
+                    'Score': device['Score'],
+                    'IsVeryOldDevice': True
+                })
+                fleet_costs[f"Individual_{device['DeviceID']}"] = device['ReplacementCost']
+                remaining_budget -= device['ReplacementCost']
+                very_old_devices.remove(device)
+        
+        # Add very old device replacements to yearly replacements
+        if very_old_replacements:
+            yearly_replacements.extend(very_old_replacements)
+        
+        # Then handle fleet replacements
         for fleet in remaining_fleets[:]:  # Use slice to avoid modification during iteration
             try:
                 fleet_replacement_cost = fleet['FleetReplacementCost']
@@ -669,7 +610,8 @@ def generate_fleet_forecast(fleet_scores: List[Dict],
 
 def generate_unconstrained_forecast(fleet_scores: List[Dict], 
                                   devices: pd.DataFrame,
-                                  replacement_costs: Dict[str, float]) -> List[Dict]:
+                                  replacement_costs: Dict[str, float],
+                                  very_old_devices: List[Dict]) -> List[Dict]:
     """
     Generate replacement forecast based on scores and age without budget constraints.
     
@@ -677,12 +619,14 @@ def generate_unconstrained_forecast(fleet_scores: List[Dict],
         fleet_scores: List of fleet scores
         devices: DataFrame containing device information
         replacement_costs: Dictionary of replacement costs
+        very_old_devices: List of very old devices for individual replacement
     
     Returns:
         List[Dict]: Forecast for replacement years
     """
     forecast = []
     beyond_ten_years = []  # Store fleets with replacement years beyond 10 years
+    very_old_beyond_ten_years = []  # Store very old devices with replacement years beyond 10 years
     
     # Sort fleet_scores by TotalScore in descending order (highest priority first)
     sorted_fleet_scores = sorted(fleet_scores, key=lambda x: x['TotalScore'], reverse=True)
@@ -774,32 +718,113 @@ def generate_unconstrained_forecast(fleet_scores: List[Dict],
         if original_replacement_year > max_replacement_year:
             beyond_ten_years.append(fleet_entry)
     
+    # Process very old devices for individual replacement
+    very_old_replacements = []
+    for device in very_old_devices:
+        # Very old devices should be replaced soon, but consider their score
+        score_factor = 1 - (device['Score'] / 100.0)
+        
+        # Determine replacement year based on score
+        if score_factor > 0.7:  # Score < 30 (good performance)
+            # Extend replacement by 1-2 years
+            extension_years = int(1 + (score_factor - 0.7) * 5)
+            replacement_year = current_year + extension_years
+        elif score_factor > 0.5:  # Score < 50 (moderate performance)
+            # Extend replacement by 1 year
+            replacement_year = current_year + 1
+        else:
+            # High score (poor performance), recommend immediate replacement
+            replacement_year = current_year
+        
+        # Store the original replacement year
+        original_replacement_year = replacement_year
+        
+        # Limit replacement year to 10 years from now for display purposes
+        max_replacement_year = current_year + 10
+        capped_replacement_year = min(replacement_year, max_replacement_year)
+        
+        # Create very old device replacement entry
+        device_entry = {
+            'DeviceID': device['DeviceID'],
+            'DeviceType': device['DeviceType'],
+            'Age': device['Age'],
+            'FleetAvgAge': device['FleetAvgAge'],
+            'ExpectedLifecycle': device['ExpectedLifecycle'],
+            'ReplacementYear': capped_replacement_year,
+            'OriginalReplacementYear': original_replacement_year,
+            'ReplacementCost': device['ReplacementCost'],
+            'Score': device['Score'],
+            'YearsUntilReplacement': capped_replacement_year - current_year,
+            'OriginalYearsUntilReplacement': original_replacement_year - current_year,
+            'IsBeyondTenYears': original_replacement_year > max_replacement_year,
+            'IsVeryOldDevice': True,
+            'Location': device['Location'],
+            'RiskClass': device['RiskClass']
+        }
+        
+        very_old_replacements.append(device_entry)
+        
+        # If replacement is beyond 10 years, add to the very_old_beyond_ten_years list
+        if original_replacement_year > max_replacement_year:
+            very_old_beyond_ten_years.append(device_entry)
+    
     # Group replacements by year
     # Find the maximum year in the forecast (limited to 10 years)
-    max_year = min(max(f['ReplacementYear'] for f in fleet_replacements), current_year + 10)
+    max_year = min(max(
+        max(f['ReplacementYear'] for f in fleet_replacements),
+        max(d['ReplacementYear'] for d in very_old_replacements) if very_old_replacements else 0
+    ), current_year + 10)
     
     # Create forecast entries for each year from current year to max year
     for year in range(current_year, max_year + 1):
-        year_replacements = [f for f in fleet_replacements if f['ReplacementYear'] == year]
+        year_replacements = []
+        
+        # Add fleet replacements for this year
+        year_fleet_replacements = [f for f in fleet_replacements if f['ReplacementYear'] == year]
+        if year_fleet_replacements:
+            year_replacements.extend([{
+                'DeviceType': f['DeviceType'],
+                'FleetSize': f['FleetSize'],
+                'DeviceIDs': f['DeviceIDs'],
+                'Score': f['Score'],
+                'AvgAge': f['AvgAge'],
+                'ExpectedLifecycle': f['ExpectedLifecycle'],
+                'YearsUntilReplacement': f['YearsUntilReplacement'],
+                'OriginalYearsUntilReplacement': f['OriginalYearsUntilReplacement'],
+                'IsBeyondTenYears': f['IsBeyondTenYears']
+            } for f in year_fleet_replacements])
+        
+        # Add very old device replacements for this year
+        year_very_old_replacements = [d for d in very_old_replacements if d['ReplacementYear'] == year]
+        if year_very_old_replacements:
+            year_replacements.extend([{
+                'DeviceID': d['DeviceID'],
+                'DeviceType': d['DeviceType'],
+                'Age': d['Age'],
+                'FleetAvgAge': d['FleetAvgAge'],
+                'ExpectedLifecycle': d['ExpectedLifecycle'],
+                'Score': d['Score'],
+                'YearsUntilReplacement': d['YearsUntilReplacement'],
+                'OriginalYearsUntilReplacement': d['OriginalYearsUntilReplacement'],
+                'IsBeyondTenYears': d['IsBeyondTenYears'],
+                'IsVeryOldDevice': True,
+                'Location': d['Location'],
+                'RiskClass': d['RiskClass']
+            } for d in year_very_old_replacements])
         
         if year_replacements:
-            fleet_costs = {f['DeviceType']: f['FleetReplacementCost'] for f in year_replacements}
-            total_cost = sum(fleet_costs.values())
+            # Calculate costs
+            fleet_costs = {f['DeviceType']: f['FleetReplacementCost'] for f in year_fleet_replacements}
+            very_old_costs = {f"Individual_{d['DeviceID']}": d['ReplacementCost'] for d in year_very_old_replacements}
+            
+            # Combine costs
+            all_costs = {**fleet_costs, **very_old_costs}
+            total_cost = sum(all_costs.values())
             
             forecast.append({
                 'Year': year,
-                'FleetsToReplace': [{
-                    'DeviceType': f['DeviceType'],
-                    'FleetSize': f['FleetSize'],
-                    'DeviceIDs': f['DeviceIDs'],
-                    'Score': f['Score'],
-                    'AvgAge': f['AvgAge'],
-                    'ExpectedLifecycle': f['ExpectedLifecycle'],
-                    'YearsUntilReplacement': f['YearsUntilReplacement'],
-                    'OriginalYearsUntilReplacement': f['OriginalYearsUntilReplacement'],
-                    'IsBeyondTenYears': f['IsBeyondTenYears']
-                } for f in year_replacements],
-                'FleetCosts': fleet_costs,
+                'FleetsToReplace': year_replacements,
+                'FleetCosts': all_costs,
                 'TotalCost': total_cost,
                 'IsUnconstrained': True
             })
@@ -824,6 +849,30 @@ def generate_unconstrained_forecast(fleet_scores: List[Dict],
             'IsBeyondTenYears': True
         })
     
+    # Add a special entry for very old devices beyond 10 years
+    if very_old_beyond_ten_years:
+        forecast.append({
+            'Year': 'Beyond 10 Years',
+            'FleetsToReplace': [{
+                'DeviceID': d['DeviceID'],
+                'DeviceType': d['DeviceType'],
+                'Age': d['Age'],
+                'FleetAvgAge': d['FleetAvgAge'],
+                'ExpectedLifecycle': d['ExpectedLifecycle'],
+                'Score': d['Score'],
+                'YearsUntilReplacement': d['OriginalYearsUntilReplacement'],
+                'IsBeyondTenYears': True,
+                'IsVeryOldDevice': True,
+                'Location': d['Location'],
+                'RiskClass': d['RiskClass']
+            } for d in very_old_beyond_ten_years],
+            'FleetCosts': {f"Individual_{d['DeviceID']}": d['ReplacementCost'] for d in very_old_beyond_ten_years},
+            'TotalCost': sum(d['ReplacementCost'] for d in very_old_beyond_ten_years),
+            'IsUnconstrained': True,
+            'IsBeyondTenYears': True,
+            'IsVeryOldDevices': True
+        })
+    
     return forecast
 
 def output_fleet_forecast(forecast: List[Dict], annual_budget: Optional[float] = None):
@@ -842,43 +891,94 @@ def output_fleet_forecast(forecast: List[Dict], annual_budget: Optional[float] =
     for entry in forecast:
         # Check if this is the "Beyond 10 Years" entry
         if entry.get('IsBeyondTenYears', False) and entry['Year'] == 'Beyond 10 Years':
-            print("\nFleets Scheduled for Replacement Beyond 10 Years:")
-            print("(These fleets are performing well and have longer expected lifecycles)")
-            
-            for fleet in entry['FleetsToReplace']:
-                device_type = fleet['DeviceType']
-                fleet_size = fleet['FleetSize']
-                years_until_replacement = fleet['YearsUntilReplacement']
-                score = fleet['Score']
-                avg_age = fleet['AvgAge']
-                expected_lifecycle = fleet['ExpectedLifecycle']
+            if entry.get('IsVeryOldDevices', False):
+                print("\nVery Old Devices Scheduled for Replacement Beyond 10 Years:")
+                print("(These devices are significantly older than their fleet average but performing well)")
                 
-                print(f"- {device_type}: {fleet_size} devices")
-                print(f"  Replacement in {years_until_replacement} years (Year {datetime.now().year + years_until_replacement})")
-                print(f"  Score: {score}, Avg Age: {avg_age:.1f} years")
-                print(f"  Expected Lifecycle: {expected_lifecycle} years")
-            
-            print(f"Total Cost for Fleets Beyond 10 Years: ${entry['TotalCost']:,.2f}")
+                for device in entry['FleetsToReplace']:
+                    device_id = device['DeviceID']
+                    device_type = device['DeviceType']
+                    age = device['Age']
+                    fleet_avg_age = device['FleetAvgAge']
+                    years_until_replacement = device['YearsUntilReplacement']
+                    score = device['Score']
+                    location = device['Location']
+                    risk_class = device['RiskClass']
+                    
+                    print(f"- Device {device_id} ({device_type}) at {location} (Risk: {risk_class})")
+                    print(f"  Age: {age:.1f} years (Fleet average: {fleet_avg_age:.1f} years)")
+                    print(f"  Replacement in {years_until_replacement} years (Year {datetime.now().year + years_until_replacement})")
+                    print(f"  Score: {score}")
+                
+                print(f"Total Cost for Very Old Devices Beyond 10 Years: ${entry['TotalCost']:,.2f}")
+            else:
+                print("\nFleets Scheduled for Replacement Beyond 10 Years:")
+                print("(These fleets are performing well and have longer expected lifecycles)")
+                
+                for fleet in entry['FleetsToReplace']:
+                    device_type = fleet['DeviceType']
+                    fleet_size = fleet['FleetSize']
+                    years_until_replacement = fleet['YearsUntilReplacement']
+                    score = fleet['Score']
+                    avg_age = fleet['AvgAge']
+                    expected_lifecycle = fleet['ExpectedLifecycle']
+                    
+                    print(f"- {device_type}: {fleet_size} devices")
+                    print(f"  Replacement in {years_until_replacement} years (Year {datetime.now().year + years_until_replacement})")
+                    print(f"  Score: {score}, Avg Age: {avg_age:.1f} years")
+                    print(f"  Expected Lifecycle: {expected_lifecycle} years")
+                
+                print(f"Total Cost for Fleets Beyond 10 Years: ${entry['TotalCost']:,.2f}")
             continue
         
         print(f"\nYear {entry['Year']}:")
-        print("Fleets to Replace:")
-        if 'FleetCosts' in entry:
-            for device_type, cost in entry['FleetCosts'].items():
-                fleet_info = next((f for f in entry['FleetsToReplace'] if f['DeviceType'] == device_type), None)
-                if fleet_info:
-                    replacement_type = "Partial" if fleet_info.get('IsPartialReplacement', False) else "Complete"
-                    print(f"- {device_type}: {replacement_type} replacement of {fleet_info['FleetSize']} devices: ${cost:,.2f}")
+        print("Replacements:")
+        
+        # Group replacements by type (fleet vs. very old device)
+        fleet_replacements = [r for r in entry['FleetsToReplace'] if not r.get('IsVeryOldDevice', False)]
+        very_old_replacements = [r for r in entry['FleetsToReplace'] if r.get('IsVeryOldDevice', False)]
+        
+        # Output fleet replacements
+        if fleet_replacements:
+            print("Fleets to Replace:")
+            for fleet in fleet_replacements:
+                device_type = fleet['DeviceType']
+                fleet_size = fleet['FleetSize']
+                cost = entry['FleetCosts'].get(device_type, 0)
+                
+                replacement_type = "Partial" if fleet.get('IsPartialReplacement', False) else "Complete"
+                print(f"- {device_type}: {replacement_type} replacement of {fleet_size} devices: ${cost:,.2f}")
+                
+                # For unconstrained forecast, show additional details
+                if entry.get('IsUnconstrained', False):
+                    print(f"  Score: {fleet.get('Score', 'N/A')}, Avg Age: {fleet.get('AvgAge', 'N/A'):.1f} years")
+                    print(f"  Expected Lifecycle: {fleet.get('ExpectedLifecycle', 'N/A')} years")
+                    print(f"  Years Until Replacement: {fleet.get('YearsUntilReplacement', 'N/A')}")
                     
-                    # For unconstrained forecast, show additional details
-                    if entry.get('IsUnconstrained', False):
-                        print(f"  Score: {fleet_info.get('Score', 'N/A')}, Avg Age: {fleet_info.get('AvgAge', 'N/A'):.1f} years")
-                        print(f"  Expected Lifecycle: {fleet_info.get('ExpectedLifecycle', 'N/A')} years")
-                        print(f"  Years Until Replacement: {fleet_info.get('YearsUntilReplacement', 'N/A')}")
-                        
-                        # If this fleet is actually scheduled beyond 10 years but capped for display
-                        if fleet_info.get('IsBeyondTenYears', False):
-                            print(f"  Note: This fleet is actually scheduled for replacement in {fleet_info.get('OriginalYearsUntilReplacement', 'N/A')} years")
+                    # If this fleet is actually scheduled beyond 10 years but capped for display
+                    if fleet.get('IsBeyondTenYears', False):
+                        print(f"  Note: This fleet is actually scheduled for replacement in {fleet.get('OriginalYearsUntilReplacement', 'N/A')} years")
+        
+        # Output very old device replacements
+        if very_old_replacements:
+            print("Very Old Devices to Replace:")
+            for device in very_old_replacements:
+                device_id = device['DeviceID']
+                device_type = device['DeviceType']
+                age = device['Age']
+                fleet_avg_age = device['FleetAvgAge']
+                cost = entry['FleetCosts'].get(f"Individual_{device_id}", 0)
+                location = device['Location']
+                risk_class = device['RiskClass']
+                
+                print(f"- Device {device_id} ({device_type}) at {location} (Risk: {risk_class})")
+                print(f"  Age: {age:.1f} years (Fleet average: {fleet_avg_age:.1f} years)")
+                print(f"  Replacement Cost: ${cost:,.2f}")
+                print(f"  Score: {device.get('Score', 'N/A')}")
+                
+                # If this device is actually scheduled beyond 10 years but capped for display
+                if device.get('IsBeyondTenYears', False):
+                    print(f"  Note: This device is actually scheduled for replacement in {device.get('OriginalYearsUntilReplacement', 'N/A')} years")
         
         print(f"Total Cost: ${entry['TotalCost']:,.2f}")
         if 'RemainingBudget' in entry:
@@ -907,68 +1007,143 @@ def export_forecast_to_csv(forecast: List[Dict], annual_budget: Optional[float] 
     for entry in forecast:
         # Skip the "Beyond 10 Years" entry as we'll handle it separately
         if entry.get('IsBeyondTenYears', False) and entry['Year'] == 'Beyond 10 Years':
-            for fleet in entry['FleetsToReplace']:
-                device_type = fleet['DeviceType']
-                fleet_size = fleet['FleetSize']
-                replacement_cost = entry['FleetCosts'].get(device_type, 0)
-                
-                # Create a row for the CSV
-                row = {
-                    'Year': 'Beyond 10 Years',
-                    'DeviceType': device_type,
-                    'FleetSize': fleet_size,
-                    'ReplacementType': 'Complete',
-                    'ReplacementCost': replacement_cost,
-                    'TotalYearCost': entry['TotalCost'],
-                    'RemainingBudget': None,
-                    'ForecastType': forecast_type,
-                    'Score': fleet.get('Score', 'N/A'),
-                    'AvgAge': fleet.get('AvgAge', 'N/A'),
-                    'ExpectedLifecycle': fleet.get('ExpectedLifecycle', 'N/A'),
-                    'YearsUntilReplacement': fleet.get('YearsUntilReplacement', 'N/A'),
-                    'IsBeyondTenYears': True
-                }
-                
-                csv_data.append(row)
+            # Handle fleet replacements beyond 10 years
+            if not entry.get('IsVeryOldDevices', False):
+                for fleet in entry['FleetsToReplace']:
+                    device_type = fleet['DeviceType']
+                    fleet_size = fleet['FleetSize']
+                    replacement_cost = entry['FleetCosts'].get(device_type, 0)
+                    
+                    # Create a row for the CSV
+                    row = {
+                        'Year': 'Beyond 10 Years',
+                        'DeviceType': device_type,
+                        'FleetSize': fleet_size,
+                        'ReplacementType': 'Complete',
+                        'ReplacementCost': replacement_cost,
+                        'TotalYearCost': entry['TotalCost'],
+                        'RemainingBudget': None,
+                        'ForecastType': forecast_type,
+                        'Score': fleet.get('Score', 'N/A'),
+                        'AvgAge': fleet.get('AvgAge', 'N/A'),
+                        'ExpectedLifecycle': fleet.get('ExpectedLifecycle', 'N/A'),
+                        'YearsUntilReplacement': fleet.get('YearsUntilReplacement', 'N/A'),
+                        'IsBeyondTenYears': True,
+                        'IsVeryOldDevice': False
+                    }
+                    
+                    csv_data.append(row)
+            # Handle very old devices beyond 10 years
+            else:
+                for device in entry['FleetsToReplace']:
+                    device_id = device['DeviceID']
+                    device_type = device['DeviceType']
+                    age = device['Age']
+                    fleet_avg_age = device['FleetAvgAge']
+                    replacement_cost = entry['FleetCosts'].get(f"Individual_{device_id}", 0)
+                    location = device['Location']
+                    risk_class = device['RiskClass']
+                    
+                    # Create a row for the CSV
+                    row = {
+                        'Year': 'Beyond 10 Years',
+                        'DeviceID': device_id,
+                        'DeviceType': device_type,
+                        'Age': age,
+                        'FleetAvgAge': fleet_avg_age,
+                        'Location': location,
+                        'RiskClass': risk_class,
+                        'ReplacementCost': replacement_cost,
+                        'TotalYearCost': entry['TotalCost'],
+                        'RemainingBudget': None,
+                        'ForecastType': forecast_type,
+                        'Score': device.get('Score', 'N/A'),
+                        'ExpectedLifecycle': device.get('ExpectedLifecycle', 'N/A'),
+                        'YearsUntilReplacement': device.get('YearsUntilReplacement', 'N/A'),
+                        'IsBeyondTenYears': True,
+                        'IsVeryOldDevice': True
+                    }
+                    
+                    csv_data.append(row)
             continue
         
         year = entry['Year']
         total_cost = entry['TotalCost']
         remaining_budget = entry.get('RemainingBudget', None)
         
-        # Process each fleet in the year
-        for fleet in entry['FleetsToReplace']:
-            device_type = fleet['DeviceType']
-            fleet_size = fleet['FleetSize']
-            replacement_cost = entry['FleetCosts'].get(device_type, 0)
-            
-            # Determine replacement type
-            replacement_type = "Partial" if fleet.get('IsPartialReplacement', False) else "Complete"
-            
-            # Create a row for the CSV
-            row = {
-                'Year': year,
-                'DeviceType': device_type,
-                'FleetSize': fleet_size,
-                'ReplacementType': replacement_type,
-                'ReplacementCost': replacement_cost,
-                'TotalYearCost': total_cost,
-                'RemainingBudget': remaining_budget,
-                'ForecastType': forecast_type,
-                'IsBeyondTenYears': fleet.get('IsBeyondTenYears', False)
-            }
-            
-            # Add unconstrained forecast specific fields
-            if entry.get('IsUnconstrained', False):
-                row.update({
-                    'Score': fleet.get('Score', 'N/A'),
-                    'AvgAge': fleet.get('AvgAge', 'N/A'),
-                    'ExpectedLifecycle': fleet.get('ExpectedLifecycle', 'N/A'),
-                    'YearsUntilReplacement': fleet.get('YearsUntilReplacement', 'N/A'),
-                    'OriginalYearsUntilReplacement': fleet.get('OriginalYearsUntilReplacement', 'N/A')
-                })
-            
-            csv_data.append(row)
+        # Process each replacement in the year
+        for replacement in entry['FleetsToReplace']:
+            # Handle fleet replacements
+            if not replacement.get('IsVeryOldDevice', False):
+                device_type = replacement['DeviceType']
+                fleet_size = replacement['FleetSize']
+                replacement_cost = entry['FleetCosts'].get(device_type, 0)
+                
+                # Determine replacement type
+                replacement_type = "Partial" if replacement.get('IsPartialReplacement', False) else "Complete"
+                
+                # Create a row for the CSV
+                row = {
+                    'Year': year,
+                    'DeviceType': device_type,
+                    'FleetSize': fleet_size,
+                    'ReplacementType': replacement_type,
+                    'ReplacementCost': replacement_cost,
+                    'TotalYearCost': total_cost,
+                    'RemainingBudget': remaining_budget,
+                    'ForecastType': forecast_type,
+                    'IsBeyondTenYears': replacement.get('IsBeyondTenYears', False),
+                    'IsVeryOldDevice': False
+                }
+                
+                # Add unconstrained forecast specific fields
+                if entry.get('IsUnconstrained', False):
+                    row.update({
+                        'Score': replacement.get('Score', 'N/A'),
+                        'AvgAge': replacement.get('AvgAge', 'N/A'),
+                        'ExpectedLifecycle': replacement.get('ExpectedLifecycle', 'N/A'),
+                        'YearsUntilReplacement': replacement.get('YearsUntilReplacement', 'N/A'),
+                        'OriginalYearsUntilReplacement': replacement.get('OriginalYearsUntilReplacement', 'N/A')
+                    })
+                
+                csv_data.append(row)
+            # Handle very old device replacements
+            else:
+                device_id = replacement['DeviceID']
+                device_type = replacement['DeviceType']
+                age = replacement['Age']
+                fleet_avg_age = replacement['FleetAvgAge']
+                replacement_cost = entry['FleetCosts'].get(f"Individual_{device_id}", 0)
+                location = replacement['Location']
+                risk_class = replacement['RiskClass']
+                
+                # Create a row for the CSV
+                row = {
+                    'Year': year,
+                    'DeviceID': device_id,
+                    'DeviceType': device_type,
+                    'Age': age,
+                    'FleetAvgAge': fleet_avg_age,
+                    'Location': location,
+                    'RiskClass': risk_class,
+                    'ReplacementCost': replacement_cost,
+                    'TotalYearCost': total_cost,
+                    'RemainingBudget': remaining_budget,
+                    'ForecastType': forecast_type,
+                    'IsBeyondTenYears': replacement.get('IsBeyondTenYears', False),
+                    'IsVeryOldDevice': True
+                }
+                
+                # Add unconstrained forecast specific fields
+                if entry.get('IsUnconstrained', False):
+                    row.update({
+                        'Score': replacement.get('Score', 'N/A'),
+                        'ExpectedLifecycle': replacement.get('ExpectedLifecycle', 'N/A'),
+                        'YearsUntilReplacement': replacement.get('YearsUntilReplacement', 'N/A'),
+                        'OriginalYearsUntilReplacement': replacement.get('OriginalYearsUntilReplacement', 'N/A')
+                    })
+                
+                csv_data.append(row)
     
     # Create DataFrame from the flattened data
     df = pd.DataFrame(csv_data)
@@ -1004,6 +1179,9 @@ def main(annual_budget: Optional[float] = None):
         
         # Process devices and calculate fleet scores
         fleet_scores = calculate_fleet_scores(devices, work_orders, replacement_costs, utilization_cache)
+        
+        # Identify very old devices for individual replacement
+        very_old_devices = identify_very_old_devices(devices, fleet_scores)
         
         # Generate and output fleet forecast
         forecast = generate_fleet_forecast(fleet_scores, devices, replacement_costs, annual_budget)

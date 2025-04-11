@@ -128,4 +128,71 @@ Modified the `main()` function to:
 
 3. **Sharing and Collaboration**: The CSV file can be easily shared with stakeholders who may not have access to the application.
 
-4. **Historical Record**: The timestamped filenames allow for tracking changes in forecasts over time. 
+4. **Historical Record**: The timestamped filenames allow for tracking changes in forecasts over time.
+
+## Very Old Device Handling (2024-03-21)
+
+### Overview
+Added functionality to identify and handle very old devices as one-off replacements, separate from their fleet. This ensures that individual devices that are significantly older than their fleet average are evaluated independently and can be replaced on their own timeline.
+
+### Key Changes
+1. **Very Old Device Identification**
+   - Added `identify_very_old_devices` function to identify devices that are:
+     - 50% older than their fleet average
+     - At least 80% of their expected lifecycle
+   - These devices are evaluated individually rather than as part of their fleet
+
+2. **Individual Device Scoring**
+   - Very old devices are scored using the same criteria as fleets but at the individual level
+   - Score considers:
+     - Age relative to expected lifecycle
+     - Maintenance costs
+     - Risk score
+     - Maintenance history
+     - Location score
+     - Utilization (assumed high for critical devices)
+
+3. **Replacement Strategy**
+   - For budget-constrained forecasts:
+     - Very old devices with high scores are prioritized for immediate replacement
+     - They are handled before fleet replacements to ensure critical individual devices are addressed
+   - For unconstrained forecasts:
+     - Replacement timing is based on the device's score
+     - Good performing devices (score < 30) may have replacement extended by 1-2 years
+     - Moderate performing devices (score < 50) may have replacement extended by 1 year
+     - Poor performing devices are recommended for immediate replacement
+
+4. **Output Format**
+   - Very old devices are displayed separately from fleet replacements
+   - For each very old device, the output shows:
+     - Device ID and type
+     - Location and risk class
+     - Age and fleet average age
+     - Replacement cost
+     - Score
+     - Years until replacement
+   - Devices beyond 10 years are grouped in a special section
+
+5. **CSV Export**
+   - Added new columns to track very old devices:
+     - DeviceID
+     - Age
+     - FleetAvgAge
+     - Location
+     - RiskClass
+     - IsVeryOldDevice flag
+   - Separate entries for very old devices beyond 10 years
+
+### Benefits
+- **Improved Risk Management**: Identifies and addresses individual devices that pose higher risks due to age
+- **More Granular Planning**: Allows for targeted replacement of problematic devices without waiting for fleet replacement
+- **Better Resource Allocation**: Prioritizes replacement of critical individual devices within budget constraints
+- **Enhanced Visibility**: Provides clear information about very old devices in reports and exports
+- **Comprehensive Forecasting**: Ensures all devices are included in the forecast, with appropriate handling for very old devices
+
+### Technical Details
+- Modified `generate_fleet_forecast` to identify and handle very old devices
+- Updated `generate_unconstrained_forecast` to include very old devices in the forecast
+- Enhanced `output_fleet_forecast` to display very old device information
+- Updated `export_forecast_to_csv` to include very old device data in exports
+- Added `identify_very_old_devices` function to calculate device-specific metrics 
