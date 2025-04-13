@@ -1,0 +1,5 @@
+Claude Sonnet 3.5 - for coding implementation
+OpenAI o1-preview - for high level planning and strategy
+Gpt-4o - interchangeable with Claude for day to day work
+Gpt-4o-mini - for quick and dirty work
+Gemini 1.5 - long context and multi-modal

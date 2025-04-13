@@ -1,0 +1,101 @@
+DeviceID,DeviceType,RiskClass,PurchaseDate,Location,UtilizationRate (hours/day)
+D001,MRI Scanner,CRITICAL,2010-05-20,Radiology,12
+D002,X-Ray Machine,HIGH,2015-08-15,ER,18
+D003,Infusion Pump,HIGH,2012-03-10,ICU,24
+D004,ECG Machine,REG,2018-11-05,Cardiology,8
+D005,Ultrasound,REG,2011-07-22,Maternity,10
+D006,CT Scanner,CRITICAL,2013-09-30,Radiology,16
+D007,Defibrillator,CRITICAL,2019-01-15,ER,24
+D008,Ventilator,CRITICAL,2017-06-22,ICU,24
+D009,Patient Monitor,HIGH,2016-04-18,ICU,24
+D010,Anesthesia Machine,CRITICAL,2014-11-03,Operating Room,12
+D011,Surgical Light,REG,2020-02-28,Operating Room,14
+D012,Surgical Table,LOW,2019-07-12,Operating Room,14
+D013,Blood Gas Analyzer,HIGH,2018-09-05,Laboratory,16
+D014,Centrifuge,LOW,2017-03-25,Laboratory,12
+D015,Microscope,LOW,2016-08-14,Laboratory,10
+D016,Dialysis Machine,CRITICAL,2015-12-01,Nephrology,18
+D017,Mammography Unit,HIGH,2019-04-30,Radiology,8
+D018,Portable X-Ray,HIGH,2018-07-19,ER,16
+D019,Ultrasound,REG,2020-01-15,Cardiology,12
+D020,EEG Machine,REG,2017-11-28,Neurology,6
+D021,Infusion Pump,HIGH,2019-05-17,Pediatrics,24
+D022,Patient Monitor,HIGH,2018-02-14,Pediatrics,24
+D023,Ventilator,CRITICAL,2016-10-09,ER,24
+D024,Defibrillator,CRITICAL,2020-03-22,ICU,24
+D025,ECG Machine,REG,2019-08-11,ER,16
+D026,Ultrasound,REG,2017-04-05,ER,14
+D027,Blood Pressure Monitor,LOW,2020-06-30,General Ward,24
+D028,Pulse Oximeter,LOW,2020-05-15,General Ward,24
+D029,CT Scanner,CRITICAL,2015-03-28,Radiology,14
+D030,MRI Scanner,CRITICAL,2012-08-17,Radiology,10
+D031,X-Ray Machine,HIGH,2016-11-20,Orthopedics,12
+D032,Ultrasound,REG,2018-12-05,Orthopedics,8
+D033,Patient Monitor,HIGH,2019-09-14,Operating Room,14
+D034,Anesthesia Machine,CRITICAL,2016-07-08,Operating Room,12
+D035,Surgical Light,REG,2017-10-23,Operating Room,14
+D036,Infusion Pump,HIGH,2020-04-11,Oncology,24
+D037,Patient Monitor,HIGH,2019-11-29,Oncology,24
+D038,Chemotherapy Pump,HIGH,2018-06-13,Oncology,12
+D039,Blood Gas Analyzer,HIGH,2017-09-02,ICU,24
+D040,Ventilator,CRITICAL,2019-02-18,Pediatrics,24
+D041,Infant Incubator,CRITICAL,2018-10-07,NICU,24
+D042,Phototherapy Unit,REG,2020-01-05,NICU,16
+D043,Patient Monitor,HIGH,2019-07-24,NICU,24
+D044,Infusion Pump,HIGH,2020-03-09,NICU,24
+D045,ECG Machine,REG,2017-12-15,General Ward,12
+D046,Defibrillator,CRITICAL,2018-08-30,General Ward,24
+D047,Ultrasound,REG,2019-05-12,Emergency,14
+D048,Patient Monitor,HIGH,2020-02-08,Emergency,24
+D049,Ventilator,CRITICAL,2018-11-17,Emergency,24
+D050,X-Ray Machine,HIGH,2017-06-25,Emergency,16
+D051,CT Scanner,CRITICAL,2014-04-19,Emergency,16
+D052,Blood Gas Analyzer,HIGH,2019-01-30,Emergency,24
+D053,Defibrillator,CRITICAL,2020-05-28,Cardiology,24
+D054,ECG Machine,REG,2019-10-15,Cardiology,12
+D055,Patient Monitor,HIGH,2020-04-22,Cardiology,24
+D056,Cardiac Catheterization System,CRITICAL,2016-03-11,Cardiology,10
+D057,Ultrasound,REG,2018-09-28,Urology,8
+D058,Patient Monitor,HIGH,2019-12-07,Urology,12
+D059,Surgical Light,REG,2017-08-14,Urology,10
+D060,Endoscopy System,HIGH,2018-05-19,Gastroenterology,10
+D061,Patient Monitor,HIGH,2020-01-23,Gastroenterology,12
+D062,Surgical Light,REG,2019-06-08,Gastroenterology,10
+D063,Anesthesia Machine,CRITICAL,2015-10-12,Day Surgery,8
+D064,Patient Monitor,HIGH,2019-03-27,Day Surgery,10
+D065,Surgical Table,LOW,2018-07-16,Day Surgery,8
+D066,Dialysis Machine,CRITICAL,2016-09-04,Nephrology,16
+D067,Patient Monitor,HIGH,2019-11-13,Nephrology,16
+D068,Blood Pressure Monitor,LOW,2020-04-30,Nephrology,16
+D069,MRI Scanner,CRITICAL,2013-12-21,Neurology,10
+D070,EEG Machine,REG,2018-08-09,Neurology,8
+D071,Patient Monitor,HIGH,2019-10-26,Neurology,12
+D072,CT Scanner,CRITICAL,2015-05-14,Oncology,12
+D073,Linear Accelerator,CRITICAL,2014-02-28,Oncology,10
+D074,PET Scanner,CRITICAL,2016-11-07,Oncology,8
+D075,Mammography Unit,HIGH,2017-07-23,Women's Health,8
+D076,Ultrasound,REG,2019-04-12,Women's Health,10
+D077,Patient Monitor,HIGH,2020-02-29,Women's Health,12
+D078,Bone Densitometer,REG,2018-12-15,Orthopedics,6
+D079,X-Ray Machine,HIGH,2016-05-31,Orthopedics,10
+D080,Patient Monitor,HIGH,2019-09-18,Orthopedics,12
+D081,Respiratory Function Analyzer,REG,2018-04-07,Pulmonology,8
+D082,Patient Monitor,HIGH,2019-11-24,Pulmonology,12
+D083,Ventilator,CRITICAL,2017-08-13,Pulmonology,16
+D084,Ophthalmoscope,LOW,2020-03-02,Ophthalmology,8
+D085,Visual Field Analyzer,REG,2019-06-19,Ophthalmology,6
+D086,Surgical Microscope,REG,2017-12-08,Ophthalmology,8
+D087,Dental X-Ray,HIGH,2018-09-25,Dental,6
+D088,Dental Chair Unit,LOW,2019-05-14,Dental,8
+D089,Sterilizer,HIGH,2020-01-31,Central Sterile,24
+D090,Washer Disinfector,REG,2019-08-27,Central Sterile,24
+D091,Ultrasound,REG,2018-03-16,Sports Medicine,6
+D092,Patient Monitor,HIGH,2019-10-03,Sports Medicine,8
+D093,ECG Machine,REG,2020-02-20,Sports Medicine,6
+D094,X-Ray Machine,HIGH,2017-11-09,Urgent Care,14
+D095,Patient Monitor,HIGH,2019-07-28,Urgent Care,16
+D096,Defibrillator,CRITICAL,2020-04-15,Urgent Care,24
+D097,Ultrasound,REG,2018-12-02,Urgent Care,12
+D098,Blood Gas Analyzer,HIGH,2019-05-21,Laboratory,16
+D099,Chemistry Analyzer,HIGH,2017-10-10,Laboratory,14
+D100,Hematology Analyzer,HIGH,2018-07-05,Laboratory,14

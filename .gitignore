@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific
+config.py
+.env
+*.log
+data/
+utilization_cache.csv
+lifecycle_cache.csv
+
+# Logs
+*.log
+logs/
+
+# Data
+data/*.csv
+!data/devices.csv
+!data/work_orders.csv
+!data/replacement_costs.csv
+
+# Output
+output/
+*.csv
+!data/*.csv
+
+# Cache
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebook
+.ipynb_checkpoints 

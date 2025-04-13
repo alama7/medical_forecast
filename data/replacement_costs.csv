@@ -1,0 +1,82 @@
+DeviceType,ReplacementCost
+MRI Scanner,1800000
+CT Scanner,850000
+X-Ray Machine,150000
+Ultrasound,80000
+Patient Monitor,18000
+Ventilator,35000
+Defibrillator,30000
+Infusion Pump,3500
+ECG Machine,12000
+Anesthesia Machine,85000
+Surgical Light,35000
+Surgical Table,60000
+Blood Gas Analyzer,35000
+Centrifuge,8000
+Microscope,25000
+Dialysis Machine,30000
+Mammography Unit,250000
+EEG Machine,35000
+Blood Pressure Monitor,2500
+Pulse Oximeter,1500
+Infant Incubator,40000
+Phototherapy Unit,15000
+Cardiac Catheterization System,1200000
+Endoscopy System,150000
+Linear Accelerator,3500000
+PET Scanner,2200000
+Bone Densitometer,85000
+Visual Field Analyzer,45000
+Surgical Microscope,120000
+Dental X-Ray,35000
+Dental Chair Unit,20000
+Sterilizer,50000
+Washer Disinfector,45000
+Chemistry Analyzer,175000
+Hematology Analyzer,125000
+Infusion Pumps General Purpose,3500
+Monitors Physiologic Patient Transport,20000
+Microscopes Light Operating,95000
+Anesthesia Gas Machine,85000
+Electrosurgical Unit,25000
+Fetal Monitor,25000
+Laser Surgical,85000
+Lithotripter,500000
+Fluoroscopy System,350000
+Radiography System,200000
+Telemetry System,75000
+Stress Test System,45000
+Holter Monitor,5000
+Spirometer,12000
+Oxygen Concentrator,4500
+Nebulizer,2000
+Suction Pump,7500
+Warming Unit,15000
+Cooling Unit,18000
+Syringe Pump,8000
+Feeding Pump,6000
+Arthroscopy System,65000
+Laparoscopy System,120000
+Cryotherapy Unit,30000
+Diathermy Unit,25000
+Ultrasonic Cleaner,12000
+Autoclave,40000
+Blanket Warmer,8000
+Wheelchair,1500
+Hospital Bed,8000
+Stretcher,6000
+Exam Table,4500
+Ophthalmoscope,2500
+Otoscope,1800
+Laryngoscope,3500
+Defibrillator Automated External,2500
+Electromyograph,45000
+Audiometer,15000
+Tympanometer,12000
+Tonometer,8000
+Pacemaker Analyzer,35000
+Radiation Therapy Simulator,750000
+Gamma Camera,350000
+Cryostat,35000
+Microtome,25000
+Tissue Processor,40000

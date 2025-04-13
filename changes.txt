@@ -1,0 +1,198 @@
+# Changes Made to Implement Fleet-Level Replacement Strategies
+
+## Overview
+The codebase has been modified to recommend fleet-level replacements rather than individual device replacements, which is more practical for medical facilities. This document outlines the key changes made to implement this strategy.
+
+## New Functions Added
+
+### 1. `calculate_fleet_scores`
+- Groups devices by their type (creating fleets)
+- Calculates fleet-level metrics:
+  - Average age of the fleet
+  - Average maintenance costs
+  - Highest risk level in the fleet (using the most critical device)
+  - Average maintenance history score
+  - Highest location score (using the most critical location)
+  - Utilization rate specific to the device type
+- Assigns a total score to each fleet based on these metrics
+- Calculates the total replacement cost for the entire fleet
+
+### 2. `generate_fleet_forecast`
+- Prioritizes fleets based on their total score
+- For each year in the forecast:
+  - Attempts to replace entire fleets when budget allows
+  - For high-priority fleets (score > 75), recommends partial replacements when full replacement isn't possible
+  - For partial replacements, selects the oldest devices in the fleet (20% of the fleet size)
+  - Tracks both complete and partial fleet replacements
+
+### 3. `output_fleet_forecast`
+- Clearly indicates whether a replacement is complete or partial
+- Shows the number of devices being replaced in each fleet
+- Provides cost information at the fleet level
+- Maintains the annual budget tracking
+
+## Configuration Changes
+
+Added a new parameter to the config file:
+- `HIGH_PRIORITY_THRESHOLD`: Set to 75, this determines when a fleet should be considered for partial replacement if a full replacement isn't possible within the budget.
+
+## Main Function Changes
+
+Modified the `main()` function to:
+- Use the new fleet-level scoring and forecasting functions
+- Output fleet-level replacement recommendations
+
+## Benefits of Fleet-Level Replacement Strategy
+
+1. **Strategic Planning**: Facilities can now plan replacements at the fleet level, which is more practical for budgeting and operations.
+
+2. **Partial Replacement Option**: For high-priority fleets that can't be fully replaced due to budget constraints, the system recommends replacing the oldest 20% of devices, allowing for phased replacement.
+
+3. **Risk Management**: By considering the highest risk level in a fleet, the system ensures that critical devices are prioritized.
+
+4. **Cost Efficiency**: Replacing entire fleets can often be more cost-effective than individual replacements due to potential volume discounts and reduced administrative overhead.
+
+5. **Operational Continuity**: Fleet-level replacements allow for better planning of downtime and training.
+
+## Additional Changes: Budget and Non-Budget Scenarios
+
+### 1. Flexible Budget Handling
+- Modified the system to handle both budget-constrained and unconstrained scenarios
+- Added command-line argument `--budget` to optionally specify an annual budget
+- When no budget is provided, the system generates recommendations based on device scores and age
+
+### 2. New Function: `generate_unconstrained_forecast`
+- Creates replacement recommendations based on device scores and age when no budget is provided
+- Calculates optimal replacement timing for each fleet using:
+  - Device age relative to expected lifecycle (primary factor)
+  - Device score (secondary factor that can override age-based recommendations)
+- For devices past their expected lifecycle:
+  - If score is low (good performance), extends replacement timeline by 3-5 years
+  - If score is moderate, extends replacement timeline by 1-2 years
+  - If score is high (poor performance), recommends immediate replacement
+- For devices approaching end-of-life:
+  - If score is low, extends replacement timeline
+  - If score is high, recommends replacement at expected end-of-life
+- For newer devices, recommends replacement based on expected lifecycle
+- Includes all devices in the forecast, even those with replacement years beyond 10 years
+- Groups devices with replacement years beyond 10 years into a special "Beyond 10 Years" category
+
+### 3. Enhanced Output
+- Updated output to clearly indicate whether recommendations are budget-constrained or unconstrained
+- For unconstrained forecasts, shows:
+  - When each fleet should be replaced based on expected lifecycle and score
+  - The expected lifecycle of each device type
+  - The current age of each fleet
+  - The device score and how it affects the replacement timeline
+  - The years until replacement for each fleet
+  - A special section for fleets scheduled for replacement beyond 10 years
+- For budget-constrained forecasts, shows how the budget is allocated across fleets within the 5-year window
+
+### 4. Command-Line Interface
+- Added argument parsing to allow users to specify an optional budget
+- Example usage: `python main.py --budget 200000` for budget-constrained forecast
+- Example usage: `python main.py` for unconstrained forecast based on scores and age
+
+### 5. Benefits of the Revised Approach
+
+1. **Balanced Decision Making**: The unconstrained forecast considers both device age and performance, not just blindly replacing old devices.
+
+2. **Performance-Based Extensions**: Devices that are past their expected lifecycle but performing well have their replacement timeline extended.
+
+3. **Long-Term Strategic Planning**: Facilities receive a comprehensive long-term replacement plan that aligns with both device lifecycles and performance.
+
+4. **Cost Optimization**: By extending the life of well-performing devices, even if they're older, the system helps optimize long-term costs.
+
+5. **Complete Inventory Visibility**: All devices are included in the forecast, even those with replacement years beyond 10 years, providing a complete picture of the facility's equipment.
+
+## Additional Feature: CSV Export
+
+### 1. New Function: `export_forecast_to_csv`
+- Exports the forecast data to a CSV file for easier analysis and sharing
+- Flattens the nested forecast data into a tabular format suitable for CSV
+- Includes all relevant information including year, device type, fleet size, replacement type, costs, and forecast type
+- For unconstrained forecasts, also includes additional metrics like score, average age, expected lifecycle, and years until replacement
+- Includes a special "Beyond 10 Years" category for devices scheduled for replacement beyond the 10-year horizon
+- Generates a timestamped filename to avoid overwriting previous exports
+- Returns the path to the exported CSV file
+
+### 2. Main Function Update
+- Modified the `main()` function to call the new export function after generating and displaying the forecast
+- Prints a confirmation message with the path to the exported CSV file
+
+### 3. Benefits of CSV Export
+
+1. **Data Portability**: The forecast data can be easily imported into spreadsheet software or other analysis tools.
+
+2. **Comprehensive Documentation**: The CSV includes all the key metrics needed for further analysis or reporting.
+
+3. **Sharing and Collaboration**: The CSV file can be easily shared with stakeholders who may not have access to the application.
+
+4. **Historical Record**: The timestamped filenames allow for tracking changes in forecasts over time.
+
+## Very Old Device Handling (2024-03-21)
+
+### Overview
+Added functionality to identify and handle very old devices as one-off replacements, separate from their fleet. This ensures that individual devices that are significantly older than their fleet average are evaluated independently and can be replaced on their own timeline.
+
+### Key Changes
+1. **Very Old Device Identification**
+   - Added `identify_very_old_devices` function to identify devices that are:
+     - 50% older than their fleet average
+     - At least 80% of their expected lifecycle
+   - These devices are evaluated individually rather than as part of their fleet
+
+2. **Individual Device Scoring**
+   - Very old devices are scored using the same criteria as fleets but at the individual level
+   - Score considers:
+     - Age relative to expected lifecycle
+     - Maintenance costs
+     - Risk score
+     - Maintenance history
+     - Location score
+     - Utilization (assumed high for critical devices)
+
+3. **Replacement Strategy**
+   - For budget-constrained forecasts:
+     - Very old devices with high scores are prioritized for immediate replacement
+     - They are handled before fleet replacements to ensure critical individual devices are addressed
+   - For unconstrained forecasts:
+     - Replacement timing is based on the device's score
+     - Good performing devices (score < 30) may have replacement extended by 1-2 years
+     - Moderate performing devices (score < 50) may have replacement extended by 1 year
+     - Poor performing devices are recommended for immediate replacement
+
+4. **Output Format**
+   - Very old devices are displayed separately from fleet replacements
+   - For each very old device, the output shows:
+     - Device ID and type
+     - Location and risk class
+     - Age and fleet average age
+     - Replacement cost
+     - Score
+     - Years until replacement
+   - Devices beyond 10 years are grouped in a special section
+
+5. **CSV Export**
+   - Added new columns to track very old devices:
+     - DeviceID
+     - Age
+     - FleetAvgAge
+     - Location
+     - RiskClass
+     - IsVeryOldDevice flag
+   - Separate entries for very old devices beyond 10 years
+
+### Benefits
+- **Improved Risk Management**: Identifies and addresses individual devices that pose higher risks due to age
+- **More Granular Planning**: Allows for targeted replacement of problematic devices without waiting for fleet replacement
+- **Better Resource Allocation**: Prioritizes replacement of critical individual devices within budget constraints
+- **Enhanced Visibility**: Provides clear information about very old devices in reports and exports
+- **Comprehensive Forecasting**: Ensures all devices are included in the forecast, with appropriate handling for very old devices
+
+### Technical Details
+- Modified `generate_fleet_forecast` to identify and handle very old devices
+- Updated `generate_unconstrained_forecast` to include very old devices in the forecast
+- Enhanced `output_fleet_forecast` to display very old device information
+- Updated `export_forecast_to_csv` to include very old device data in exports
+- Added `identify_very_old_devices` function to calculate device-specific metrics 

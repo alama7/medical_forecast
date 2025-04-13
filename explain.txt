@@ -1,0 +1,132 @@
+# Medical Equipment Replacement Forecast System - Function Explanation
+
+## Overview
+This system is designed to analyze medical equipment fleets and generate replacement forecasts based on various factors such as device age, maintenance history, risk classification, and budget constraints. The system helps healthcare facilities plan equipment replacements strategically.
+
+## Core Functions
+
+### 1. Data Loading and Preprocessing
+
+#### `load_asset_data()`
+- **Purpose**: Loads device data, work orders, and replacement costs from CSV files.
+- **Input**: None
+- **Output**: Tuple of (devices DataFrame, work orders DataFrame, replacement costs dictionary)
+- **Correlation**: Called by `main()` to initialize the data needed for the entire analysis process.
+
+#### `preprocess_work_orders(work_orders, batch_size=10)`
+- **Purpose**: Processes work orders to categorize maintenance types using AI.
+- **Input**: Work orders DataFrame, batch size for API calls
+- **Output**: Processed work orders DataFrame with standardized maintenance types
+- **Correlation**: Called by `main()` before calculating fleet scores to ensure consistent maintenance type categorization.
+
+### 2. Device and Fleet Scoring
+
+#### `calculate_device_age(purchase_date)`
+- **Purpose**: Calculates the age of a device in years based on its purchase date.
+- **Input**: Purchase date (string or datetime)
+- **Output**: Device age in years
+- **Correlation**: Used by `calculate_device_scores()` and `calculate_fleet_scores()` to determine device age.
+
+#### `calculate_annual_maintenance_cost(device_id, year, work_orders)`
+- **Purpose**: Calculates the total maintenance cost for a device in a given year.
+- **Input**: Device ID, year, work orders DataFrame
+- **Output**: Total maintenance cost for the year
+- **Correlation**: Used by `calculate_device_scores()` to evaluate maintenance cost impact on replacement priority.
+
+#### `calculate_device_scores(devices, work_orders, replacement_costs, utilization_cache)`
+- **Purpose**: Calculates scores for individual devices based on age, maintenance cost, risk, etc.
+- **Input**: Devices DataFrame, work orders DataFrame, replacement costs dictionary, utilization cache
+- **Output**: List of device scores with detailed metrics
+- **Correlation**: Called by `calculate_fleet_scores()` to get individual device scores before aggregating to fleet level.
+
+#### `calculate_maintenance_history_score(device_id, work_orders)`
+- **Purpose**: Calculates a score based on the device's maintenance history.
+- **Input**: Device ID, work orders DataFrame
+- **Output**: Maintenance history score
+- **Correlation**: Used by `calculate_device_scores()` as one component of the total device score.
+
+#### `calculate_location_score(location)`
+- **Purpose**: Calculates a score based on the device's location.
+- **Input**: Location string
+- **Output**: Location score
+- **Correlation**: Used by `calculate_device_scores()` as one component of the total device score.
+
+#### `calculate_total_score(age_score, maintenance_cost_score, risk_score, maintenance_history_score, location_score, utilization_score)`
+- **Purpose**: Combines various component scores into a total device score.
+- **Input**: Individual component scores
+- **Output**: Total score
+- **Correlation**: Used by `calculate_device_scores()` to compute the final device score.
+
+#### `calculate_fleet_scores(devices, work_orders, replacement_costs, utilization_cache)`
+- **Purpose**: Calculates scores for each fleet of devices.
+- **Input**: Devices DataFrame, work orders DataFrame, replacement costs dictionary, utilization cache
+- **Output**: List of fleet scores with aggregated metrics
+- **Correlation**: Called by `main()` to determine fleet replacement priorities, which are then used by `generate_fleet_forecast()`.
+
+### 3. Device Identification and Forecasting
+
+#### `identify_very_old_devices(devices, fleet_scores, work_orders, replacement_costs)`
+- **Purpose**: Identifies individual devices that are significantly older than their fleet average.
+- **Input**: Devices DataFrame, fleet scores list, work orders DataFrame, replacement costs dictionary
+- **Output**: List of very old devices that should be replaced individually
+- **Correlation**: Called by `generate_fleet_forecast()` to identify devices that need immediate replacement regardless of fleet status.
+
+#### `generate_fleet_forecast(fleet_scores, devices, replacement_costs, work_orders, annual_budget=None)`
+- **Purpose**: Generates replacement forecast for the next 5 years at the fleet level.
+- **Input**: Fleet scores list, devices DataFrame, replacement costs dictionary, work orders DataFrame, optional annual budget
+- **Output**: List of forecast entries for each year
+- **Correlation**: Called by `main()` to generate the forecast, which then calls either `generate_unconstrained_forecast()` or uses budget-constrained logic.
+
+#### `generate_unconstrained_forecast(fleet_scores, devices, replacement_costs, very_old_devices)`
+- **Purpose**: Generates replacement forecast based on scores and age without budget constraints.
+- **Input**: Fleet scores list, devices DataFrame, replacement costs dictionary, very old devices list
+- **Output**: List of forecast entries for each year
+- **Correlation**: Called by `generate_fleet_forecast()` when no budget is provided.
+
+### 4. Output and Export
+
+#### `output_fleet_forecast(forecast, annual_budget=None)`
+- **Purpose**: Outputs the fleet forecast results to the console.
+- **Input**: Forecast list, optional annual budget
+- **Output**: Console output with formatted forecast information
+- **Correlation**: Called by `main()` to display the forecast results to the user.
+
+#### `export_forecast_to_csv(forecast, annual_budget=None)`
+- **Purpose**: Exports the fleet forecast results to a CSV file.
+- **Input**: Forecast list, optional annual budget
+- **Output**: Path to the exported CSV file
+- **Correlation**: Called by `main()` to save the forecast results to a file.
+
+### 5. Main Execution
+
+#### `main(annual_budget=None)`
+- **Purpose**: Main function to run the equipment analysis.
+- **Input**: Optional annual budget
+- **Output**: None (displays results and exports to CSV)
+- **Correlation**: Orchestrates the entire process by calling the other functions in sequence.
+
+## Function Flow
+
+1. `main()` is called with an optional annual budget
+2. `load_asset_data()` loads the necessary data
+3. `preprocess_work_orders()` processes the work orders data
+4. `calculate_fleet_scores()` calculates scores for each fleet
+5. `generate_fleet_forecast()` generates the forecast:
+   - Calls `identify_very_old_devices()` to find devices needing immediate replacement
+   - If no budget is provided, calls `generate_unconstrained_forecast()`
+   - If budget is provided, uses budget-constrained logic
+6. `output_fleet_forecast()` displays the results
+7. `export_forecast_to_csv()` saves the results to a file
+
+## Key Relationships
+
+- **Data Flow**: Data loaded by `load_asset_data()` flows through the scoring functions to the forecast generation functions.
+- **Scoring Hierarchy**: Individual device scores (`calculate_device_scores()`) feed into fleet scores (`calculate_fleet_scores()`), which determine replacement priorities.
+- **Forecast Generation**: The forecast generation functions use the scores and device data to create a timeline of replacements.
+- **Output Options**: The forecast can be displayed (`output_fleet_forecast()`) or exported (`export_forecast_to_csv()`).
+
+## Budget Impact
+
+- When a budget is provided, the system prioritizes replacements based on both scores and budget constraints.
+- When no budget is provided, the system generates an unconstrained forecast based solely on scores and device age.
+- The budget parameter affects how `generate_fleet_forecast()` operates and which forecasting logic is used. 

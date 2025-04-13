@@ -1,0 +1,43 @@
+DeviceType,ExpectedLifecycle
+MRI Scanner,10.0
+X-Ray Machine,8.0
+Infusion Pump,7.0
+ECG Machine,10.0
+Ultrasound,9.0
+CT Scanner,12.0
+Defibrillator,8.0
+Ventilator,10.0
+Patient Monitor,7.0
+Anesthesia Machine,10.0
+Surgical Light,15.0
+Surgical Table,20.0
+Blood Gas Analyzer,8.0
+Centrifuge,10.0
+Microscope,15.0
+Dialysis Machine,8.0
+Mammography Unit,10.0
+Portable X-Ray,8.0
+EEG Machine,10.0
+Blood Pressure Monitor,5.0
+Pulse Oximeter,5.0
+Chemotherapy Pump,6.0
+Infant Incubator,8.0
+Phototherapy Unit,6.0
+Cardiac Catheterization System,15.0
+Endoscopy System,8.0
+Linear Accelerator,15.0
+PET Scanner,12.0
+Bone Densitometer,10.0
+Respiratory Function Analyzer,8.0
+Ophthalmoscope,6.0
+Visual Field Analyzer,8.0
+Surgical Microscope,10.0
+Dental X-Ray,8.0
+Dental Chair Unit,10.0
+Sterilizer,7.0
+Washer Disinfector,7.0
+Chemistry Analyzer,8.0
+Hematology Analyzer,8.0
+CT,10.0
+MRI,11.0
+X-Ray,10.0
