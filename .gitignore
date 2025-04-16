@@ -1,3 +1,10 @@
+# Excel temporary files
+~$*.xlsx
+~$*.xls
+
+# Log files
+*.log
+
 # Python
 __pycache__/
 *.py[cod]
@@ -34,7 +41,6 @@ ENV/
 
 # Project specific
 config.py
-.env
 *.log
 data/
 utilization_cache.csv

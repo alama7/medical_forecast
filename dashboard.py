@@ -140,36 +140,39 @@ if isinstance(forecast_data, list):
         year = year_entry['Year']
         
         # Process fleet replacements for this year
-        for fleet in year_entry.get('FleetsToReplace', []):
-            device_type = fleet['DeviceType']
-            fleet_size = fleet.get('FleetSize', 1)
-            
-            # Get the total number of devices of this type
-            total_devices = st.session_state.device_counts.get(device_type, 0)
-            
-            row = {
-                'Year': year,
-                'DeviceType': device_type,
-                'FleetSize': fleet_size,
-                'TotalDevices': total_devices,  # Add total devices of this type
-                'ReplacementCost': year_entry['FleetCosts'].get(device_type, 0),
-                'TotalYearCost': year_entry['TotalCost'],
-                'IsVeryOldDevice': fleet.get('IsVeryOldDevice', False)
-            }
-            
-            # Add score if available
-            if 'Score' in fleet:
-                row['TotalScore'] = fleet['Score']
-            
-            # Add additional fields if available
-            if 'AvgAge' in fleet:
-                row['AvgAge'] = fleet['AvgAge']
-            if 'ExpectedLifecycle' in fleet:
-                row['ExpectedLifecycle'] = fleet['ExpectedLifecycle']
-            if 'YearsUntilReplacement' in fleet:
-                row['YearsUntilReplacement'] = fleet['YearsUntilReplacement']
-            if 'Location' in fleet:
-                row['Location'] = fleet['Location']
+        for replacement in year_entry.get('FleetsToReplace', []):
+            # Handle individual device replacements
+            if 'DeviceID' in replacement:
+                row = {
+                    'Year': year,
+                    'DeviceType': replacement['DeviceType'],
+                    'FleetSize': 1,  # Individual device
+                    'TotalDevices': 1,
+                    'ReplacementCost': year_entry['FleetCosts'].get(f"Individual_{replacement['DeviceID']}", 0),
+                    'TotalYearCost': year_entry['TotalCost'],
+                    'IsVeryOldDevice': replacement.get('IsVeryOldDevice', False),
+                    'DeviceID': replacement['DeviceID'],
+                    'Age': replacement.get('Age', 0),
+                    'Score': replacement.get('Score', 0),
+                    'IsIndividualReplacement': True
+                }
+            # Handle fleet replacements
+            else:
+                device_type = replacement['DeviceType']
+                fleet_size = replacement.get('FleetSize', 1)
+                total_devices = st.session_state.device_counts.get(device_type, 0)
+                
+                row = {
+                    'Year': year,
+                    'DeviceType': device_type,
+                    'FleetSize': fleet_size,
+                    'TotalDevices': total_devices,
+                    'ReplacementCost': year_entry['FleetCosts'].get(device_type, 0),
+                    'TotalYearCost': year_entry['TotalCost'],
+                    'IsVeryOldDevice': False,
+                    'IsPartialReplacement': replacement.get('IsPartialReplacement', False),
+                    'IsIndividualReplacement': False
+                }
             
             forecast_df = pd.concat([forecast_df, pd.DataFrame([row])], ignore_index=True)
     
@@ -183,7 +186,8 @@ if isinstance(forecast_data, list):
             'TotalScore': [0],
             'ReplacementCost': [0],
             'TotalYearCost': [0],
-            'IsVeryOldDevice': [False]
+            'IsVeryOldDevice': [False],
+            'IsIndividualReplacement': [False]
         })
     
     forecast_data = forecast_df
@@ -239,18 +243,18 @@ with st.expander("Debug Information"):
     # Count devices by year
     year_counts = merged_data.groupby('Year').agg({
         'DeviceType': 'count',
-        'FleetSize': 'sum'
+        'ReplacementCost': 'sum'
     }).reset_index()
-    year_counts.columns = ['Year', 'Device Types', 'Total Devices']
+    year_counts.columns = ['Year', 'Device Types', 'Total Cost']
     st.write("Devices by year:")
     st.dataframe(year_counts)
     
     # Count devices by device type
     device_type_counts = merged_data.groupby('DeviceType').agg({
-        'FleetSize': 'sum',
+        'ReplacementCost': 'sum',
         'TotalDevices': 'first'
     }).reset_index()
-    device_type_counts.columns = ['Device Type', 'Devices in Forecast', 'Total Devices of Type']
+    device_type_counts.columns = ['Device Type', 'Total Cost', 'Total Devices of Type']
     st.write("Devices by type:")
     st.dataframe(device_type_counts)
     
@@ -339,8 +343,7 @@ if budget is None and st.session_state.all_devices_df is not None:
             missing_data.append({
                 'Year': 'Not Scheduled',
                 'DeviceType': device_type,
-                'FleetSize': 1,
-                'TotalDevices': total_devices,
+                'TotalDevices': total_devices,  # Use actual total devices
                 'TotalScore': 0,  # Default score
                 'ReplacementCost': st.session_state.replacement_costs.get(device_type, 0),
                 'TotalYearCost': 0,
@@ -357,16 +360,19 @@ if budget is None and st.session_state.all_devices_df is not None:
 
 # Display key metrics
 st.header('Key Metrics')
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
-    total_devices_in_forecast = filtered_data['FleetSize'].sum()
-    st.metric('Total Devices in Forecast', total_devices_in_forecast)
+    total_device_types = filtered_data['DeviceType'].nunique()
+    st.metric('Total Device Types', total_device_types)
 with col2:
-    st.metric('Average Fleet Score', f"{filtered_data['TotalScore'].mean():.1f}")
+    total_devices_to_replace = filtered_data['TotalDevices'].sum()
+    st.metric('Total Devices to Replace', total_devices_to_replace)
 with col3:
-    st.metric('Average Device Age', f"{filtered_data['Age'].mean():.1f} years")
+    st.metric('Average Fleet Score', f"{filtered_data['TotalScore'].mean():.1f}")
 with col4:
+    st.metric('Average Device Age', f"{filtered_data['Age'].mean():.1f} years")
+with col5:
     urgent_replacements = len(filtered_data[filtered_data['IsVeryOldDevice']])
     st.metric('Urgent Replacements', urgent_replacements)
 
@@ -382,25 +388,113 @@ timeline_data = timeline_data.sort_values('YearNum')
 
 # Group by year for the chart
 timeline_grouped = timeline_data.groupby('Year').agg({
-    'DeviceType': 'count',
-    'FleetSize': 'sum',
+    'TotalDevices': 'sum',  # Sum the actual number of devices
+    'DeviceType': 'nunique',  # Count unique device types
+    'ReplacementCost': 'sum',
     'TotalYearCost': 'sum'
 }).reset_index()
 
-# Create the chart
-fig = px.bar(timeline_grouped, x='Year', y='FleetSize', 
-             title='Device Replacements by Year',
-             labels={'FleetSize': 'Number of Devices', 'Year': 'Year'})
-fig.add_scatter(x=timeline_grouped['Year'], y=timeline_grouped['TotalYearCost'], 
-                name='Total Cost', yaxis='y2', line=dict(color='red'))
+# If budget is specified, cap the total cost at the budget
+if budget is not None:
+    timeline_grouped['TotalYearCost'] = timeline_grouped['TotalYearCost'].clip(upper=budget)
+
+# Create the chart with two y-axes
+fig = go.Figure()
+
+# Add bar chart for total device count
+fig.add_trace(go.Bar(
+    x=timeline_grouped['Year'],
+    y=timeline_grouped['TotalDevices'],
+    name='Total Devices',
+    yaxis='y',
+    marker_color='blue'
+))
+
+# Add bar chart for number of device types
+fig.add_trace(go.Bar(
+    x=timeline_grouped['Year'],
+    y=timeline_grouped['DeviceType'],
+    name='Number of Device Types',
+    yaxis='y',
+    marker_color='lightblue'
+))
+
+# Add line for total cost
+fig.add_trace(go.Scatter(
+    x=timeline_grouped['Year'],
+    y=timeline_grouped['TotalYearCost'],
+    name='Total Cost',
+    yaxis='y2',
+    line=dict(color='red')
+))
 
 # Add budget line if budget is specified
 if budget is not None:
-    fig.add_hline(y=budget, line_dash="dash", line_color="green", 
-                  annotation_text=f"Budget: ${budget:,}", 
-                  annotation_position="bottom right")
+    # Get the x-axis range
+    x_min = timeline_grouped['Year'].min()
+    x_max = timeline_grouped['Year'].max()
+    
+    # Add budget line using add_shape
+    fig.add_shape(
+        type="line",
+        x0=x_min,
+        x1=x_max,
+        y0=float(budget),
+        y1=float(budget),
+        line=dict(
+            color="green",
+            width=2,
+            dash="dash",
+        ),
+        yref="y2"
+    )
+    
+    # Add budget annotation
+    fig.add_annotation(
+        x=x_max,
+        y=float(budget),
+        text=f"Budget: ${budget:,.2f}",
+        showarrow=False,
+        yref="y2",
+        yanchor="bottom",
+        yshift=10
+    )
 
-fig.update_layout(yaxis2=dict(title='Total Cost ($)', overlaying='y', side='right'))
+# Update layout
+fig.update_layout(
+    title='Device Replacements by Year',
+    xaxis=dict(title='Year'),
+    yaxis=dict(
+        title='Number of Devices',
+        side='left'
+    ),
+    yaxis2=dict(
+        title='Total Cost ($)',
+        side='right',
+        overlaying='y',
+        showgrid=True,
+        gridcolor='lightgray'
+    ),
+    showlegend=True,
+    legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    ),
+    barmode='group'  # Show bars side by side
+)
+
+# Add hover template for better tooltips
+fig.update_traces(
+    hovertemplate="<br>".join([
+        "Year: %{x}",
+        "Value: %{y:,.2f}",
+        "<extra></extra>"
+    ])
+)
+
 st.plotly_chart(fig, use_container_width=True)
 
 # Fleet Analysis
@@ -415,8 +509,12 @@ with col1:
     st.plotly_chart(fig, use_container_width=True)
 
 with col2:
-    # Device age distribution
-    fig = px.histogram(filtered_data, x='Age', nbins=20, 
+    # Calculate age for all devices
+    all_devices_age = st.session_state.all_devices_df.copy()
+    all_devices_age['Age'] = (datetime.now() - pd.to_datetime(all_devices_age['PurchaseDate'])).dt.days / 365.25
+    
+    # Create histogram of device ages
+    fig = px.histogram(all_devices_age, x='Age', nbins=20, 
                       title='Device Age Distribution',
                       labels={'Age': 'Age (years)', 'count': 'Number of Devices'})
     st.plotly_chart(fig, use_container_width=True)
@@ -428,8 +526,8 @@ if 'Location' in filtered_data.columns and filtered_data['Location'].nunique() >
 
     with col1:
         # Device distribution by location
-        location_counts = filtered_data.groupby('Location')['FleetSize'].sum().reset_index()
-        fig = px.pie(values=location_counts['FleetSize'], names=location_counts['Location'], 
+        location_counts = filtered_data.groupby('Location')['DeviceType'].count().reset_index()
+        fig = px.pie(values=location_counts['DeviceType'], names=location_counts['Location'], 
                      title='Device Distribution by Location')
         st.plotly_chart(fig, use_container_width=True)
 
@@ -444,12 +542,12 @@ if 'Location' in filtered_data.columns and filtered_data['Location'].nunique() >
     st.subheader('Replacements by Location Over Time')
     
     # Group data by Year and Location
-    location_timeline = filtered_data.groupby(['Year', 'Location'])['FleetSize'].sum().reset_index()
+    location_timeline = filtered_data.groupby(['Year', 'Location'])['DeviceType'].count().reset_index()
     
     # Create a stacked bar chart
-    fig = px.bar(location_timeline, x='Year', y='FleetSize', color='Location',
+    fig = px.bar(location_timeline, x='Year', y='DeviceType', color='Location',
                  title='Replacements by Location Over Time',
-                 labels={'FleetSize': 'Number of Devices', 'Year': 'Year'})
+                 labels={'DeviceType': 'Number of Devices', 'Year': 'Year'})
     st.plotly_chart(fig, use_container_width=True)
 elif 'Location' in filtered_data.columns:
     st.info("Location analysis is not available because there is only one location in the data.")
