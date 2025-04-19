@@ -1,0 +1,756 @@
+version: "2.0"
+last_updated: "2023-11-15"
+
+categories:
+  Imaging:
+    description: "Medical imaging equipment for diagnostic and therapeutic purposes"
+    risk_classification: "HIGH"
+    subcategories:
+      XRay:
+        description: "X-ray imaging systems for diagnostic purposes"
+        expected_lifecycle: 8
+        maintenance_interval: 6
+        typical_utilization_hours: 8
+        keywords: ["x-ray", "radiographic", "fluoroscopic", "mammography"]
+        manufacturers:
+          - name: "Siemens"
+            models: ["Multix", "Yxlon", "Axiom"]
+          - name: "GE Healthcare"
+            models: ["Optima", "Definium", "Revolution"]
+          - name: "Philips"
+            models: ["DigitalDiagnost", "BuckyDiagnost"]
+        count: 21
+      CT:
+        description: "Computed Tomography scanners for cross-sectional imaging"
+        expected_lifecycle: 10
+        maintenance_interval: 3
+        typical_utilization_hours: 12
+        keywords: ["ct", "computed tomography", "cat scan"]
+        manufacturers:
+          - name: "Siemens"
+            models: ["Somatom", "Naeotom"]
+          - name: "GE Healthcare"
+            models: ["Revolution", "BrightSpeed"]
+          - name: "Philips"
+            models: ["Ingenuity", "Brilliance"]
+        count: 4
+      MRI:
+        description: "Magnetic Resonance Imaging systems"
+        expected_lifecycle: 12
+        maintenance_interval: 3
+        typical_utilization_hours: 14
+        keywords: ["mri", "magnetic resonance", "tesla"]
+        manufacturers:
+          - name: "Siemens"
+            models: ["Magnetom", "Aera"]
+          - name: "GE Healthcare"
+            models: ["Signa", "Discovery"]
+          - name: "Philips"
+            models: ["Ingenia", "Achieva"]
+        count: 3
+      Ultrasound:
+        description: "Ultrasonic imaging systems"
+        expected_lifecycle: 7
+        maintenance_interval: 6
+        typical_utilization_hours: 6
+        keywords: ["ultrasound", "sonogram", "ultrasonic"]
+        manufacturers:
+          - name: "GE Healthcare"
+            models: ["Logiq", "Voluson"]
+          - name: "Philips"
+            models: ["EPIQ", "Affiniti"]
+          - name: "Siemens"
+            models: ["Acuson", "Sonoline"]
+        count: 134
+      Nuclear Medicine:
+        description: "Nuclear medicine imaging systems"
+        expected_lifecycle: 10
+        maintenance_interval: 3
+        typical_utilization_hours: 8
+        keywords: ["gamma camera", "nuclear", "spect", "pet"]
+        manufacturers:
+          - name: "GE Healthcare"
+            models: ["Discovery", "NM"]
+          - name: "Siemens"
+            models: ["Symbia", "SPECT"]
+          - name: "Philips"
+            models: ["BrightView", "Vereos"]
+        count: 5
+
+  Monitoring:
+    description: "Patient monitoring equipment for vital signs and physiological parameters"
+    risk_classification: "CRITICAL"
+    subcategories:
+      Patient Monitor:
+        description: "Patient monitoring systems for continuous vital signs monitoring"
+        expected_lifecycle: 7
+        maintenance_interval: 3
+        typical_utilization_hours: 24
+        keywords: ["patient monitor", "vital signs", "physiologic monitor"]
+        manufacturers:
+          - name: "Philips"
+            models: ["IntelliVue", "SureSigns"]
+          - name: "GE Healthcare"
+            models: ["Carescape", "Dash"]
+          - name: "Mindray"
+            models: ["BeneVision", "iPM"]
+        count: 705
+      ECG:
+        description: "Electrocardiogram machines for heart monitoring"
+        expected_lifecycle: 8
+        maintenance_interval: 6
+        typical_utilization_hours: 4
+        keywords: ["ecg", "ekg", "electrocardiogram", "electrocardiograph"]
+        manufacturers:
+          - name: "GE Healthcare"
+            models: ["MAC", "CardioSoft"]
+          - name: "Philips"
+            models: ["PageWriter", "TC"]
+          - name: "Mortara"
+            models: ["ELI", "X-Scribe"]
+        count: 0
+      Pulse Oximeter:
+        description: "Pulse oximeters for blood oxygen saturation monitoring"
+        expected_lifecycle: 5
+        maintenance_interval: 12
+        typical_utilization_hours: 24
+        keywords: ["pulse oximeter", "spo2", "oximeter"]
+        manufacturers:
+          - name: "Masimo"
+            models: ["Rad", "Rad-97"]
+          - name: "Philips"
+            models: ["IntelliVue", "SureSigns"]
+          - name: "Nonin"
+            models: ["Onyx", "WristOx"]
+        count: 390
+      Blood Pressure Monitor:
+        description: "Blood pressure monitoring devices"
+        expected_lifecycle: 5
+        maintenance_interval: 12
+        typical_utilization_hours: 8
+        keywords: ["blood pressure", "sphygmomanometer", "bp monitor"]
+        manufacturers:
+          - name: "Welch Allyn"
+            models: ["Connex", "Spot"]
+          - name: "GE Healthcare"
+            models: ["Dinamap", "Critikon"]
+          - name: "Philips"
+            models: ["IntelliVue", "SureSigns"]
+        count: 0
+      Fetal Monitor:
+        description: "Fetal monitoring systems for obstetric care"
+        expected_lifecycle: 7
+        maintenance_interval: 6
+        typical_utilization_hours: 12
+        keywords: ["fetal monitor", "cardiotocograph", "toco"]
+        manufacturers:
+          - name: "GE Healthcare"
+            models: ["Corometric", "Avalon"]
+          - name: "Philips"
+            models: ["Avalon", "FM"]
+          - name: "Edan"
+            models: ["F3", "F6"]
+        count: 373
+      Temperature Monitor:
+        description: "Temperature monitoring devices"
+        expected_lifecycle: 5
+        maintenance_interval: 12
+        typical_utilization_hours: 24
+        keywords: ["thermometer", "temperature", "tympanic"]
+        manufacturers:
+          - name: "Welch Allyn"
+            models: ["SureTemp", "Braun"]
+          - name: "Exergen"
+            models: ["TAT", "TemporalScanner"]
+          - name: "Kaz"
+            models: ["ThermoScan", "Braun"]
+        count: 831
+
+  Laboratory:
+    description: "Laboratory equipment for diagnostic testing and analysis"
+    risk_classification: "HIGH"
+    subcategories:
+      Analyzer:
+        description: "Clinical laboratory analyzers"
+        expected_lifecycle: 8
+        maintenance_interval: 3
+        typical_utilization_hours: 8
+        keywords: ["analyzer", "chemistry", "hematology", "immunoassay"]
+        manufacturers:
+          - name: "Roche"
+            models: ["Cobas", "Modular"]
+          - name: "Siemens"
+            models: ["Advia", "Dimension"]
+          - name: "Abbott"
+            models: ["Architect", "Cell-Dyn"]
+        count: 0
+      Microscope:
+        description: "Laboratory microscopes"
+        expected_lifecycle: 10
+        maintenance_interval: 12
+        typical_utilization_hours: 4
+        keywords: ["microscope", "optical", "digital"]
+        manufacturers:
+          - name: "Leica"
+            models: ["DM", "DMi8"]
+          - name: "Olympus"
+            models: ["BX", "CX"]
+          - name: "Zeiss"
+            models: ["Axio", "Primo"]
+        count: 0
+      Centrifuge:
+        description: "Laboratory centrifuges"
+        expected_lifecycle: 8
+        maintenance_interval: 6
+        typical_utilization_hours: 2
+        keywords: ["centrifuge", "spinner"]
+        manufacturers:
+          - name: "Beckman Coulter"
+            models: ["Allegra", "Optima"]
+          - name: "Eppendorf"
+            models: ["Centrifuge", "MiniSpin"]
+          - name: "Thermo Fisher"
+            models: ["Sorvall", "Heraeus"]
+        count: 0
+
+  Treatment:
+    description: "Medical equipment for patient treatment and therapy"
+    risk_classification: "CRITICAL"
+    subcategories:
+      Ventilator:
+        description: "Mechanical ventilators for respiratory support"
+        expected_lifecycle: 8
+        maintenance_interval: 3
+        typical_utilization_hours: 24
+        keywords: ["ventilator", "respirator", "breathing", "mechanical ventilation"]
+        manufacturers:
+          - name: "Medtronic"
+            models: ["Puritan Bennett", "Hamilton"]
+          - name: "Philips"
+            models: ["V60", "Trilogy"]
+          - name: "GE Healthcare"
+            models: ["Engström", "Carestation"]
+        count: 118
+      Infusion Pump:
+        description: "Infusion pumps for fluid and medication delivery"
+        expected_lifecycle: 6
+        maintenance_interval: 6
+        typical_utilization_hours: 24
+        keywords: ["infusion pump", "iv pump", "pca pump", "syringe pump"]
+        manufacturers:
+          - name: "Baxter"
+            models: ["Alaris", "Sigma"]
+          - name: "B. Braun"
+            models: ["Space", "Perfusor"]
+          - name: "Medtronic"
+            models: ["SynchroMed", "MiniMed"]
+        count: 2410
+      Defibrillator:
+        description: "Defibrillators for cardiac emergency treatment"
+        expected_lifecycle: 7
+        maintenance_interval: 3
+        typical_utilization_hours: 0
+        keywords: ["defibrillator", "aed", "cardiac", "shock"]
+        manufacturers:
+          - name: "Philips"
+            models: ["HeartStart", "MRx"]
+          - name: "Zoll"
+            models: ["X Series", "R Series"]
+          - name: "Physio-Control"
+            models: ["LIFEPAK", "LUCAS"]
+        count: 0
+      Dialysis Machine:
+        description: "Dialysis machines for renal replacement therapy"
+        expected_lifecycle: 8
+        maintenance_interval: 3
+        typical_utilization_hours: 8
+        keywords: ["dialysis", "hemodialysis", "renal", "kidney"]
+        manufacturers:
+          - name: "Fresenius"
+            models: ["2008", "5008"]
+          - name: "Baxter"
+            models: ["AK", "HomeChoice"]
+          - name: "NxStage"
+            models: ["System One", "Nx2me"]
+        count: 0
+      Laser:
+        description: "Medical lasers for various therapeutic applications"
+        expected_lifecycle: 7
+        maintenance_interval: 3
+        typical_utilization_hours: 4
+        keywords: ["laser", "photocoagulator", "surgical laser"]
+        manufacturers:
+          - name: "Lumenis"
+            models: ["VersaPulse", "UltraPulse"]
+          - name: "Syneron"
+            models: ["VelaShape", "ePrime"]
+          - name: "Cynosure"
+            models: ["SmartLipo", "Icon"]
+        count: 4
+
+  Surgical:
+    description: "Equipment used in surgical procedures"
+    risk_classification: "CRITICAL"
+    subcategories:
+      Electrosurgical Unit:
+        description: "Electrosurgical units for cutting and coagulation"
+        expected_lifecycle: 8
+        maintenance_interval: 6
+        typical_utilization_hours: 6
+        keywords: ["electrosurgical", "cautery", "bovie", "esu"]
+        manufacturers:
+          - name: "Medtronic"
+            models: ["Force FX", "Force Triad"]
+          - name: "Bovie"
+            models: ["Aaron", "IDEA"]
+          - name: "Erbe"
+            models: ["VIO", "ICC"]
+        count: 68
+      Surgical Table:
+        description: "Operating room tables"
+        expected_lifecycle: 15
+        maintenance_interval: 12
+        typical_utilization_hours: 8
+        keywords: ["surgical table", "operating table", "or table"]
+        manufacturers:
+          - name: "Stryker"
+            models: ["i7", "i8"]
+          - name: "Maquet"
+            models: ["Alphaflex", "Alphamaxx"]
+          - name: "Mizuho"
+            models: ["OSI", "OSI Pro"]
+        count: 27
+      Surgical Light:
+        description: "Surgical lighting systems"
+        expected_lifecycle: 10
+        maintenance_interval: 12
+        typical_utilization_hours: 8
+        keywords: ["surgical light", "or light", "operating light"]
+        manufacturers:
+          - name: "Berchtold"
+            models: ["LED", "SurgiLED"]
+          - name: "Trumpf"
+            models: ["LED", "Medical"]
+          - name: "Skytronic"
+            models: ["LED", "Halogen"]
+        count: 0
+      Endoscope:
+        description: "Endoscopic equipment for minimally invasive procedures"
+        expected_lifecycle: 7
+        maintenance_interval: 3
+        typical_utilization_hours: 4
+        keywords: ["endoscope", "laparoscope", "arthroscope", "colonoscope"]
+        manufacturers:
+          - name: "Karl Storz"
+            models: ["Hopkins", "IMAGE1"]
+          - name: "Olympus"
+            models: ["EVIS", "ENDOEYE"]
+          - name: "Pentax"
+            models: ["EPK", "i-Scan"]
+        count: 0
+      Smoke Evacuation:
+        description: "Smoke evacuation systems for surgical procedures"
+        expected_lifecycle: 8
+        maintenance_interval: 6
+        typical_utilization_hours: 6
+        keywords: ["smoke evacuation", "surgical smoke", "plume"]
+        manufacturers:
+          - name: "Buffalo Filter"
+            models: ["SurgiClear", "SurgiVac"]
+          - name: "Conmed"
+            models: ["ClearView", "ClearFlow"]
+          - name: "Stryker"
+            models: ["Neptune", "Smoke Shark"]
+        count: 45
+
+  Support:
+    description: "Support equipment for patient care and facility operations"
+    risk_classification: "REG"
+    subcategories:
+      Bed:
+        description: "Patient beds and support surfaces"
+        expected_lifecycle: 10
+        maintenance_interval: 6
+        typical_utilization_hours: 24
+        keywords: ["bed", "hospital bed", "patient bed", "bariatric"]
+        manufacturers:
+          - name: "Hill-Rom"
+            models: ["Advanta", "Centrella"]
+          - name: "Stryker"
+            models: ["InTouch", "Secure"]
+          - name: "Arjo"
+            models: ["Sara", "MaxiMove"]
+        count: 868
+      Scale:
+        description: "Patient weighing scales"
+        expected_lifecycle: 8
+        maintenance_interval: 12
+        typical_utilization_hours: 2
+        keywords: ["scale", "weighing", "patient scale", "infant scale"]
+        manufacturers:
+          - name: "Scale-Tronix"
+            models: ["6000", "5000"]
+          - name: "Detecto"
+            models: ["750", "600"]
+          - name: "Health-O-Meter"
+            models: ["Professional", "Medical"]
+        count: 106
+      Power System:
+        description: "Power supply and backup systems"
+        expected_lifecycle: 8
+        maintenance_interval: 12
+        typical_utilization_hours: 24
+        keywords: ["ups", "uninterruptible", "power supply", "battery backup"]
+        manufacturers:
+          - name: "APC"
+            models: ["Smart-UPS", "Symmetra"]
+          - name: "Eaton"
+            models: ["9PX", "5PX"]
+          - name: "Tripp Lite"
+            models: ["SmartPro", "SmartOnline"]
+        count: 73
+      Network Equipment:
+        description: "Network infrastructure equipment"
+        expected_lifecycle: 5
+        maintenance_interval: 12
+        typical_utilization_hours: 24
+        keywords: ["network", "switch", "router", "access point", "wifi"]
+        manufacturers:
+          - name: "Cisco"
+            models: ["Catalyst", "Meraki"]
+          - name: "Aruba"
+            models: ["Instant", "AP"]
+          - name: "HP"
+            models: ["ProCurve", "Aruba"]
+        count: 313
+      Humidifier:
+        description: "Humidification systems for respiratory therapy"
+        expected_lifecycle: 5
+        maintenance_interval: 6
+        typical_utilization_hours: 24
+        keywords: ["humidifier", "humidification", "heated"]
+        manufacturers:
+          - name: "Fisher & Paykel"
+            models: ["MR", "HC"]
+          - name: "Vapotherm"
+            models: ["Precision Flow", "HVT"]
+          - name: "Teleflex"
+            models: ["Mallinckrodt", "Respiratory"]
+        count: 194
+
+  Other:
+    description: "Miscellaneous medical equipment"
+    risk_classification: "REG"
+    subcategories:
+      Miscellaneous:
+        description: "Other medical equipment not categorized elsewhere"
+        expected_lifecycle: 7
+        maintenance_interval: 12
+        typical_utilization_hours: 4
+        keywords: ["miscellaneous", "other"]
+        manufacturers: []
+        count: 0
+
+manufacturers:
+  - name: "Philips Healthcare"
+    specialties: ["Monitoring", "Imaging", "Ventilators"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 2407
+  - name: "Alaris Medical Systems"
+    specialties: ["Infusion Pumps", "Patient Monitoring"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 2209
+  - name: "Welch Allyn"
+    specialties: ["Diagnostic Equipment", "Patient Monitoring"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 1338
+  - name: "STRYKER CORP"
+    specialties: ["Surgical Equipment", "Patient Transport"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 1051
+  - name: "MASIMO"
+    specialties: ["Patient Monitoring", "Pulse Oximetry"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 673
+  - name: "GE Healthcare"
+    specialties: ["Imaging", "Patient Monitoring", "Ventilators"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "Siemens"
+    specialties: ["Imaging", "Laboratory", "Patient Monitoring"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "Medtronic"
+    specialties: ["Ventilators", "Infusion Pumps", "Surgical Equipment"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "Baxter"
+    specialties: ["Infusion Pumps", "Dialysis"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "Hill-Rom"
+    specialties: ["Patient Beds", "Patient Transport"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "Stryker"
+    specialties: ["Surgical Equipment", "Patient Transport"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "Mindray"
+    specialties: ["Patient Monitoring", "Imaging"]
+    quality_tier: "Mid-Range"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Edan"
+    specialties: ["Patient Monitoring", "Diagnostic Equipment"]
+    quality_tier: "Mid-Range"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Mortara"
+    specialties: ["ECG", "Patient Monitoring"]
+    quality_tier: "Mid-Range"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Nonin"
+    specialties: ["Pulse Oximetry"]
+    quality_tier: "Mid-Range"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Leica"
+    specialties: ["Microscopes", "Surgical Visualization"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Olympus"
+    specialties: ["Endoscopes", "Microscopes"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Zeiss"
+    specialties: ["Microscopes", "Surgical Visualization"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Beckman Coulter"
+    specialties: ["Laboratory Equipment", "Analyzers"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Eppendorf"
+    specialties: ["Laboratory Equipment", "Centrifuges"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Thermo Fisher"
+    specialties: ["Laboratory Equipment", "Analyzers"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Roche"
+    specialties: ["Laboratory Equipment", "Analyzers"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Abbott"
+    specialties: ["Laboratory Equipment", "Analyzers"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Fresenius"
+    specialties: ["Dialysis", "Infusion Pumps"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "NxStage"
+    specialties: ["Dialysis"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "Lumenis"
+    specialties: ["Lasers", "Surgical Equipment"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Syneron"
+    specialties: ["Lasers", "Aesthetic Equipment"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Cynosure"
+    specialties: ["Lasers", "Aesthetic Equipment"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Bovie"
+    specialties: ["Electrosurgical", "Surgical Equipment"]
+    quality_tier: "Mid-Range"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Erbe"
+    specialties: ["Electrosurgical", "Surgical Equipment"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Maquet"
+    specialties: ["Surgical Tables", "Surgical Equipment"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Mizuho"
+    specialties: ["Surgical Tables", "Surgical Equipment"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Berchtold"
+    specialties: ["Surgical Lights", "Surgical Equipment"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Trumpf"
+    specialties: ["Surgical Lights", "Surgical Equipment"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Skytronic"
+    specialties: ["Surgical Lights", "Surgical Equipment"]
+    quality_tier: "Mid-Range"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Karl Storz"
+    specialties: ["Endoscopes", "Surgical Visualization"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Pentax"
+    specialties: ["Endoscopes", "Surgical Visualization"]
+    quality_tier: "Premium"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Buffalo Filter"
+    specialties: ["Smoke Evacuation", "Surgical Equipment"]
+    quality_tier: "Mid-Range"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Conmed"
+    specialties: ["Smoke Evacuation", "Surgical Equipment"]
+    quality_tier: "Mid-Range"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Arjo"
+    specialties: ["Patient Beds", "Patient Transport"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "Scale-Tronix"
+    specialties: ["Scales", "Weighing Equipment"]
+    quality_tier: "Mid-Range"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Detecto"
+    specialties: ["Scales", "Weighing Equipment"]
+    quality_tier: "Mid-Range"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Health-O-Meter"
+    specialties: ["Scales", "Weighing Equipment"]
+    quality_tier: "Mid-Range"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "APC"
+    specialties: ["Power Systems", "UPS"]
+    quality_tier: "Mid-Range"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Eaton"
+    specialties: ["Power Systems", "UPS"]
+    quality_tier: "Mid-Range"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Tripp Lite"
+    specialties: ["Power Systems", "UPS"]
+    quality_tier: "Mid-Range"
+    support_level: "Business Hours"
+    device_count: 0
+  - name: "Cisco"
+    specialties: ["Network Equipment", "IT Infrastructure"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "Aruba"
+    specialties: ["Network Equipment", "IT Infrastructure"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "HP"
+    specialties: ["Network Equipment", "IT Infrastructure"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "Fisher & Paykel"
+    specialties: ["Humidifiers", "Respiratory Equipment"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "Vapotherm"
+    specialties: ["Humidifiers", "Respiratory Equipment"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "Teleflex"
+    specialties: ["Humidifiers", "Respiratory Equipment"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "B. Braun"
+    specialties: ["Infusion Pumps", "Dialysis"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "Zoll"
+    specialties: ["Defibrillators", "Patient Monitoring"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "Physio-Control"
+    specialties: ["Defibrillators", "Patient Monitoring"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+  - name: "NxStage"
+    specialties: ["Dialysis", "Infusion Pumps"]
+    quality_tier: "Premium"
+    support_level: "24/7"
+    device_count: 0
+
+maintenance_types:
+  PM:
+    description: "Preventive Maintenance"
+    keywords: ["pm", "preventive", "maintenance", "inspection", "calibration", "cleaning"]
+    multiplier: 0
+  Repair:
+    description: "Repair and corrective maintenance"
+    keywords: ["repair", "fix", "replace", "broken", "malfunction", "not working", "failure"]
+    multiplier: 3
+  Software:
+    description: "Software-related issues and updates"
+    keywords: ["software", "firmware", "update", "program", "reboot", "reset", "configuration"]
+    multiplier: 2
+  Cosmetic:
+    description: "Cosmetic and appearance-related issues"
+    keywords: ["cosmetic", "appearance", "scratch", "dent", "paint", "aesthetic"]
+    multiplier: 2
+  User Error:
+    description: "Issues caused by user mistakes or improper use"
+    keywords: ["user error", "operator error", "misuse", "improper use", "training"]
+    multiplier: 1
